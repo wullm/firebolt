@@ -19,8 +19,8 @@ int main() {
 
     assert(strcmp(pars.Name, "Test Simulation") == 0);
     assert(strcmp(pars.OutputDirectory, "../tests") == 0);
-    assert(strcmp(pars.TransferFunctionsFile, "../transfer_functions/example_class_output_tk.dat") == 0);
-    assert(strcmp(pars.TransferFunctionsFormat, "CLASS") == 0);
+    assert(strcmp(pars.BackgroundFile, "../background/class_example_background.dat") == 0);
+    assert(strcmp(pars.BackgroundFormat, "CLASS") == 0);
 
     /* Test reading units */
     struct units us;
@@ -29,10 +29,7 @@ int main() {
     assert(us.UnitLengthMetres == 3.086e22);
     assert(us.UnitTimeSeconds == 3.154e16);
     assert(us.UnitMassKilogram == 1.989e40);
-    assert(us.TransferUnitLengthMetres == 3.085677581282e22);
-    assert(us.Transfer_hExponent == 1);
-    assert(us.Transfer_kExponent == 0);
-    assert(us.Transfer_Sign == -1);
+    assert(us.BackgroundUnitLengthMetres == 3.085677581282e22);
 
     /* Test reading cosmology */
     struct cosmology cosmo;

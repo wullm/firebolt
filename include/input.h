@@ -30,8 +30,8 @@
 struct params {
     /* Simulation parameters */
     char *Name;
-    char *TransferFunctionsFile;
-    char *TransferFunctionsFormat;
+    char *BackgroundFile;
+    char *BackgroundFormat;
 
     /* Output parameters */
     char *OutputDirectory;
@@ -43,10 +43,7 @@ struct units {
     double UnitMassKilogram;
 
     /* Units for the transfer function input data */
-    double TransferUnitLengthMetres;
-    int Transfer_hExponent; //1 for h/Mpc; 0 for 1/Mpc
-    int Transfer_kExponent; //0 for CLASS; -2 for CAMB/CMBFAST/Eisenstein-Hu
-    int Transfer_Sign; //-1 for CLASS; +1 for CAMB/CMBFAST/Eisenstein-Hu
+    double BackgroundUnitLengthMetres;
 };
 
 struct cosmology {

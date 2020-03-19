@@ -30,12 +30,12 @@ int readParams(struct params *pars, const char *fname) {
      int len = DEFAULT_STRING_LENGTH;
      pars->OutputDirectory = malloc(len);
      pars->Name = malloc(len);
-     pars->TransferFunctionsFile = malloc(len);
-     pars->TransferFunctionsFormat = malloc(len);
+     pars->BackgroundFile = malloc(len);
+     pars->BackgroundFormat = malloc(len);
      ini_gets("Output", "Directory", "./output", pars->OutputDirectory, len, fname);
      ini_gets("Simulation", "Name", "No Name", pars->Name, len, fname);
-     ini_gets("TransferFunctions", "File", "", pars->TransferFunctionsFile, len, fname);
-     ini_gets("TransferFunctions", "Format", "Plain", pars->TransferFunctionsFormat, len, fname);
+     ini_gets("Background", "File", "", pars->BackgroundFile, len, fname);
+     ini_gets("Background", "Format", "Plain", pars->BackgroundFormat, len, fname);
 
      return 0;
 }
@@ -46,27 +46,7 @@ int readUnits(struct units *us, const char *fname) {
     us->UnitTimeSeconds = ini_getd("Units", "UnitTimeSeconds", 1.0, fname);
     us->UnitMassKilogram = ini_getd("Units", "UnitMassKilogram", 1.0, fname);
 
-    /* Get the transfer functions format */
-    char format[DEFAULT_STRING_LENGTH];
-    ini_gets("TransferFunctions", "Format", "Plain", format, DEFAULT_STRING_LENGTH, fname);
-
-    /* Format of the transfer functions */
-    int default_h_exponent;
-    int default_k_exponent;
-    int default_sign;
-    if (strcmp(format, "CLASS") == 0) {
-        default_h_exponent = 1;
-        default_k_exponent = 0;
-        default_sign = -1;
-    } else {
-        default_h_exponent = 0;
-        default_k_exponent = -2;
-        default_sign = +1;
-    }
-    us->TransferUnitLengthMetres = ini_getd("TransferFunctions", "UnitLengthMetres", MPC_METRES, fname);
-    us->Transfer_hExponent = ini_getl("TransferFunctions", "hExponent", default_h_exponent, fname);
-    us->Transfer_kExponent = ini_getl("TransferFunctions", "kExponent", default_k_exponent, fname);
-    us->Transfer_Sign = ini_getl("TransferFunctions", "Sign", default_sign, fname);
+    us->BackgroundUnitLengthMetres = ini_getd("TransferFunctions", "UnitLengthMetres", MPC_METRES, fname);
 
     return 0;
 }

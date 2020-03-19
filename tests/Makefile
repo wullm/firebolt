@@ -22,3 +22,6 @@ all:
 
 	$(GCC) test_input.c -o test_input $(OBJECTS) $(LIBRARIES) $(CFLAGS) $(INCLUDES)
 	@./test_input
+
+	$(GCC) test_background.c -o test_background $(OBJECTS) $(LIBRARIES) $(CFLAGS) $(INCLUDES)
+	@./test_background

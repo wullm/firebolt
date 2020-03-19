@@ -17,14 +17,26 @@
  *
  ******************************************************************************/
 
-#ifndef DEXM_H
-#define DEXM_H
+#ifndef BACKGROUND_H
+#define BACKGROUND_H
 
 #include "input.h"
-#include "background.h"
 
-#define TXT_RED "\033[31;1m"
-#define TXT_GREEN "\033[32;1m"
-#define TXT_RESET "\033[0m"
+struct background {
+    float *z;
+    float **functions;
+    char **titles;
+    long int nrow;
+    int ncol;
+};
+
+enum background_format {
+    Plain,
+    CLASS
+};
+
+int readBackground(const struct params *pars, const struct units *us,
+                   const struct cosmology *cosmo, struct background *bg);
+int cleanBackground(struct background *bg);
 
 #endif
