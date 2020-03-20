@@ -54,4 +54,6 @@ int readParams(struct params *parser, const char *fname);
 int readUnits(struct units *us, const char *fname);
 int readCosmology(struct cosmology *cosmo, const char *fname);
 
+int cleanParams(struct params *parser);
+
 #endif

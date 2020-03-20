@@ -43,6 +43,7 @@ int main(int argc, char *argv[]) {
     readUnits(&us, fname);
     readCosmology(&cosmo, fname);
 
-
+    /* Clean up */
+    cleanParams(&pars);
 
 }

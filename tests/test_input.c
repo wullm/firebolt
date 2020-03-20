@@ -37,5 +37,8 @@ int main() {
 
     assert(cosmo.h == 0.67556);
 
+    /* Clean up */
+    cleanParams(&pars);
+
     sucmsg("test_input:\t SUCCESS");
 }

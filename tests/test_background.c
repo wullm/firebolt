@@ -50,6 +50,7 @@ int main() {
 
     /* Clean up */
     cleanBackground(&bg);
+    cleanParams(&pars);
 
     sucmsg("test_background:\t SUCCESS");
 }

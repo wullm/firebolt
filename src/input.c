@@ -56,3 +56,12 @@ int readCosmology(struct cosmology *cosmo, const char *fname) {
 
      return 0;
 }
+
+int cleanParams(struct params *pars) {
+    free(pars->OutputDirectory);
+    free(pars->Name);
+    free(pars->BackgroundFile);
+    free(pars->BackgroundFormat);
+
+    return 0;
+}
