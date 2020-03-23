@@ -17,15 +17,23 @@
  *
  ******************************************************************************/
 
-#ifndef DEXM_H
-#define DEXM_H
+#ifndef PERTURB_DATA_H
+#define PERTURB_DATA_H
 
 #include "input.h"
-#include "background.h"
-#include "perturb_data.h"
 
-#define TXT_RED "\033[31;1m"
-#define TXT_GREEN "\033[32;1m"
-#define TXT_RESET "\033[0m"
+struct perturb_data {
+  int k_size;
+  int tau_size;
+  int n_functions;
+  double *delta;
+  double *k;
+  double *log_tau;
+  char **titles;
+};
+
+int readPerturb(struct params *pars, struct units *us, struct perturb_data *pt);
+int cleanPerturb(struct perturb_data *pt);
+
 
 #endif

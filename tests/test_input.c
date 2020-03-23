@@ -21,6 +21,7 @@ int main() {
     assert(strcmp(pars.OutputDirectory, "../tests") == 0);
     assert(strcmp(pars.BackgroundFile, "../background/class_example_background.dat") == 0);
     assert(strcmp(pars.BackgroundFormat, "CLASS") == 0);
+    assert(strcmp(pars.PerturbFile, "test_perturb.hdf5") == 0);
 
     /* Test reading units */
     struct units us;

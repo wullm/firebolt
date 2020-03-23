@@ -25,3 +25,6 @@ all:
 
 	$(GCC) test_background.c -o test_background $(OBJECTS) $(LIBRARIES) $(CFLAGS) $(INCLUDES)
 	@./test_background
+
+	$(GCC) test_perturb_data.c -o test_perturb_data $(OBJECTS) $(LIBRARIES) $(CFLAGS) $(INCLUDES)
+	@./test_perturb_data

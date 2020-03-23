@@ -32,10 +32,12 @@ int readParams(struct params *pars, const char *fname) {
      pars->Name = malloc(len);
      pars->BackgroundFile = malloc(len);
      pars->BackgroundFormat = malloc(len);
+     pars->PerturbFile = malloc(len);
      ini_gets("Output", "Directory", "./output", pars->OutputDirectory, len, fname);
      ini_gets("Simulation", "Name", "No Name", pars->Name, len, fname);
      ini_gets("Background", "File", "", pars->BackgroundFile, len, fname);
      ini_gets("Background", "Format", "Plain", pars->BackgroundFormat, len, fname);
+     ini_gets("PerturbData", "File", "", pars->PerturbFile, len, fname);
 
      return 0;
 }
@@ -62,6 +64,7 @@ int cleanParams(struct params *pars) {
     free(pars->Name);
     free(pars->BackgroundFile);
     free(pars->BackgroundFormat);
+    free(pars->PerturbFile);
 
     return 0;
 }

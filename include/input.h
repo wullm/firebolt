@@ -32,6 +32,7 @@ struct params {
     char *Name;
     char *BackgroundFile;
     char *BackgroundFormat;
+    char *PerturbFile;
 
     /* Output parameters */
     char *OutputDirectory;
