@@ -40,11 +40,13 @@ int main(int argc, char *argv[]) {
     struct units us;
     struct cosmology cosmo;
     struct background bg;
+    struct perturb_data ptdat;
 
     readParams(&pars, fname);
     readUnits(&us, fname);
     readCosmology(&cosmo, fname);
     readBackground(&pars, &us, &cosmo, &bg);
+    readPerturb(&pars, &us, &ptdat);
 
     double q = 1;
     double k = 10;
@@ -58,9 +60,17 @@ int main(int argc, char *argv[]) {
 
     printf("We found %e %e %e %e %e\n", Psi[0], Psi[1], Psi[2], Psi[3], Psi[4]);
 
+    rend_interp_init(&ptdat);
+    rend_interp_switch_source(&ptdat, 5);
+    double a = rend_interp(k, log(tau));
+    rend_interp_free(&ptdat);
+
+    printf("And we found %e\n", a);
+
     free(Psi);
 
     /* Clean up */
+    cleanPerturb(&ptdat);
     cleanBackground(&bg);
     cleanParams(&pars);
 

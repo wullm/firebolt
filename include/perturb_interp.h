@@ -17,17 +17,14 @@
  *
  ******************************************************************************/
 
-#ifndef DEXM_H
-#define DEXM_H
+#ifndef PERTURB_INTERP_H
+#define PERTURB_INTERP_H
 
-#include "input.h"
-#include "background.h"
 #include "perturb_data.h"
-#include "perturb_interp.h"
-#include "ic.h"
 
-#define TXT_RED "\033[31;1m"
-#define TXT_GREEN "\033[32;1m"
-#define TXT_RESET "\033[0m"
+int rend_interp_init(struct perturb_data *pt);
+int rend_interp_switch_source(struct perturb_data *pt, int index_src);
+int rend_interp_free(struct perturb_data *pt);
+double rend_interp(double k, double tau);
 
 #endif
