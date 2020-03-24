@@ -160,20 +160,20 @@ int readBackground(const struct params *pars, const struct units *us,
     readTitles(line, format, bg->titles);
 
     /* Allocate memory for the background data */
-    bg->z = malloc(nrow * sizeof(float));
-    bg->functions = malloc(ncol * sizeof(float*));
+    bg->z = malloc(nrow * sizeof(double));
+    bg->functions = malloc(ncol * sizeof(double*));
     for (int i=0; i<ncol; i++) {
-        bg->functions[i] = malloc(nrow * sizeof(float));
+        bg->functions[i] = malloc(nrow * sizeof(double));
     }
 
     /* Read out the data into the arrays */
     int row = 0;
-    float number = 0;
+    double number = 0;
     while (fgets(line, sizeof(line), f)) {
         if (is_comment_line(line)) continue; /* skip comments */
         int read = 0, bytes;
         int col = 0;
-        while(sscanf(line + read, "%e%n", &number, &bytes) > 0) {
+        while(sscanf(line + read, "%le%n", &number, &bytes) > 0) {
             if (col == 0) {
                 bg->z[row] = number;
             } else {

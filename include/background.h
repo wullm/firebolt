@@ -23,8 +23,8 @@
 #include "input.h"
 
 struct background {
-    float *z;
-    float **functions;
+    double *z;
+    double **functions;
     char **titles;
     long int nrow;
     int ncol;
