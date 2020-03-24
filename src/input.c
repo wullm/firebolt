@@ -48,6 +48,13 @@ int readUnits(struct units *us, const char *fname) {
     us->UnitTimeSeconds = ini_getd("Units", "UnitTimeSeconds", 1.0, fname);
     us->UnitMassKilogram = ini_getd("Units", "UnitMassKilogram", 1.0, fname);
 
+    /* Physical constants */
+    us->SpeedOfLight = SPEED_OF_LIGHT_METRES_SECONDS * us->UnitTimeSeconds
+                        / us->UnitLengthMetres;
+    us->GravityG = GRAVITY_G_SI_UNITS * us->UnitTimeSeconds * us->UnitTimeSeconds
+                    / us->UnitLengthMetres / us->UnitLengthMetres / us->UnitLengthMetres
+                    * us->UnitMassKilogram; // m^3 / kg / s^2 to internal
+
     us->BackgroundUnitLengthMetres = ini_getd("TransferFunctions", "UnitLengthMetres", MPC_METRES, fname);
 
     return 0;

@@ -23,6 +23,9 @@
 #define DEFAULT_STRING_LENGTH 50
 
 #define MPC_METRES 3.085677581282e22
+#define SPEED_OF_LIGHT_METRES_SECONDS 2.99792e8
+#define GYR_OVER_MPC 3.06601394e2
+#define GRAVITY_G_SI_UNITS 6.67428e-11 // m^3 / kg / s^2
 
 /* The .ini parser library is minIni */
 #include "../parser/minIni.h"
@@ -42,6 +45,10 @@ struct units {
     double UnitLengthMetres;
     double UnitTimeSeconds;
     double UnitMassKilogram;
+
+    /* Physical constants in internal units */
+    double SpeedOfLight;
+    double GravityG;
 
     /* Units for the transfer function input data */
     double BackgroundUnitLengthMetres;

@@ -44,9 +44,14 @@ int main() {
 
     /* Verify some data values */
     assert(fabs(bg.z[0] - 1.000000000000e+14)/bg.z[0] < 1e-3);
-    assert(fabs(bg.functions[2][0] - 2.561426030796e+22)/bg.functions[2][0] < 1e-3);
     assert(fabs(bg.z[4619] - 2.495252477297e-04)/bg.z[4619] < 1e-3);
-    assert(fabs(bg.functions[2][4619] - 2.253700771351e-04)/bg.functions[2][4619] < 1e-3);
+    assert(fabs(bg.functions[2][0] - 7.84799257383e24)/bg.functions[2][0] < 1e-3);
+    assert(fabs(bg.functions[2][4619] - 0.06905148423 )/bg.functions[2][4619] < 1e-3);
+    // assert(fabs(bg.functions[2][0] - 2.561426030796e+22)/bg.functions[2][0] < 1e-3); //pre unit conversion
+    // assert(fabs(bg.functions[2][4619] - 2.253700771351e-04)/bg.functions[2][4619] < 1e-3); //pre unit conversion
+    assert(fabs(bg.functions[22][0] - 8.689880661743e-20)/bg.functions[22][0] < 1e-3);
+    assert(fabs(bg.functions[3][0] - 1.389086530606e+04)/bg.functions[3][0] < 1e-3);
+    assert(fabs(bg.functions[9][0] - 3.341e32)/bg.functions[9][0] < 1e-3);
 
     /* Clean up */
     cleanBackground(&bg);

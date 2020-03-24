@@ -190,16 +190,34 @@ int readBackground(const struct params *pars, const struct units *us,
     /* Unit conversions.
      */
 
-    double factor;
+    /* CLASS to internal units conversion factor */
+    const double mpc_length_factor = MPC_METRES / us->UnitLengthMetres;
+    const double mpc_time_factor = mpc_length_factor / us->SpeedOfLight;
+    const double gyr_time_factor = GYR_OVER_MPC * mpc_time_factor;
+    const double density_factor = 8 * M_PI * us->GravityG / 3;
 
-    /* Next, convert to internal length units */
-    // factor /= us->TransferUnitLengthMetres;
-    // factor *= us->UnitLengthMetres;
-    //
-    // /* Update the wavenumbers */
-    // for (int i=0; i<nrow; i++) {
-    //     bg->z[i] *= factor;
-    // }
+    for (int i=0; i<nrow; i++) {
+        /* Convert proper times to internal units [Gyr in CLASS] */
+        bg->functions[0][i] *= gyr_time_factor;
+        /* Convert the conformal times to internal units [Mpc in CLASS] */
+        bg->functions[1][i] *= mpc_time_factor;
+        /* Convert Hubble constant to internal units [1/Mpc in CLASS] */
+        bg->functions[2][i] /= mpc_time_factor;
+        /* Convert distances to internal units [all Mpc in CLASS] */
+        bg->functions[3][i] *= mpc_length_factor;
+        bg->functions[4][i] *= mpc_length_factor;
+        bg->functions[5][i] *= mpc_length_factor;
+        bg->functions[6][i] *= mpc_length_factor;
+        /* Convert all densities and pressures to internal units [all Mpc^-2].
+         * Note these quantities are multiplied by 8piG/3 and have dimensions
+         * of inverse time squared.
+         */
+        for (int j=7; j<ncol-3; j++) {
+            /* Convert to densities in internal units (MASS/LENGTH^3) */
+            bg->functions[j][i] /= density_factor * mpc_time_factor * mpc_time_factor;
+        }
+        /* These last two columns are dimensionless growth factors */
+    }
 
     return 0;
 }
