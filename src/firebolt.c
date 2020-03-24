@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "../include/firebolt.h"
 
@@ -38,12 +39,29 @@ int main(int argc, char *argv[]) {
     struct params pars;
     struct units us;
     struct cosmology cosmo;
+    struct background bg;
 
     readParams(&pars, fname);
     readUnits(&us, fname);
     readCosmology(&cosmo, fname);
+    readBackground(&pars, &us, &cosmo, &bg);
+
+    double q = 1.0;
+    double k = 1.0;
+    double tau = exp(-0.29);
+    printf("[q, k, tau] = [%f, %f, %f]\n", q, k, tau);
+
+    int l_max = 10;
+    double *Psi;
+
+    generate_ics(&bg, q, k, tau, &Psi, l_max);
+
+    printf("We found %f %f %f %f %f\n", Psi[0], Psi[1], Psi[2], Psi[3], Psi[4]);
+
+    free(Psi);
 
     /* Clean up */
+    cleanBackground(&bg);
     cleanParams(&pars);
 
 }

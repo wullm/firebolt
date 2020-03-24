@@ -17,16 +17,15 @@
  *
  ******************************************************************************/
 
-#ifndef DEXM_H
-#define DEXM_H
+#ifndef IC_H
+#define IC_H
 
-#include "input.h"
 #include "background.h"
-#include "perturb_data.h"
-#include "ic.h"
 
-#define TXT_RED "\033[31;1m"
-#define TXT_GREEN "\033[32;1m"
-#define TXT_RESET "\033[0m"
+/* Generate initial conditions for momentum q and wavenumber k at conformal
+ * time tau */
+void generate_ics(const struct background *bg, double q, double k, double tau,
+                   double **Psi, int l_max);
+double f0(double q);
 
 #endif
