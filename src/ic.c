@@ -136,8 +136,8 @@ void generate_ics(const struct background *bg, double q, double k, double tau,
     }
 
     /* Hubble constant today and at tau */
-    double H0 = bg->functions[id_H][bg->nrow - 1];
-    double H = bg->functions[id_H][therow];
+    double H0 = bg->functions[id_H - 1][bg->nrow - 1];
+    double H = bg->functions[id_H - 1][therow];
 
     /* Scale factor and redshift */
     double z = bg->z[therow];
@@ -147,8 +147,13 @@ void generate_ics(const struct background *bg, double q, double k, double tau,
     double rho_crit = bg->functions[id_rho_crit][therow];
     double rho_tot = bg->functions[id_rho_tot][therow];
 
+    /* Densities today */
+    double rho_crit0 = bg->functions[id_rho_crit][bg->nrow - 1];
+    double rho_tot0 = bg->functions[id_rho_tot][bg->nrow - 1];
+
     /* Curvature parameter */
-    double K = a*a*(rho_tot - rho_crit);
+    double Omega_k0 = (rho_crit0 - rho_tot0)/rho_crit0;
+    double K = -a*a*Omega_k0*H0*H0;
 
     /* Calculate total matter and radiation densities */
     double rho_m = 0, rho_r = 0;
@@ -181,12 +186,10 @@ void generate_ics(const struct background *bg, double q, double k, double tau,
     double Omega_m = rho_m / rho_crit;
     double Omega_r = rho_r / rho_crit;
 
-    printf("Omega_m, Omega_r = %f %f\n", Omega_m, Omega_r);
-    printf("We found %d ncdm species\n", n_ncdm);
-
     /* Parameter which enters into the exact solution for matter+radiation
      * cosmology (without Lambda). */
     double omega = a*Omega_m*H/sqrt(Omega_r);
+
 
     /* Parameter that is equal to 1 in a flat universe */
     double ss = 1.0 - 3*K/(k*k);
@@ -205,7 +208,10 @@ void generate_ics(const struct background *bg, double q, double k, double tau,
     /* Fraction of relics in radiation density */
     double fnu = rho_nu/rho_r;
 
-    printf("omega = %f, s^2 = %f, fnu = %f\n", omega, ss, fnu);
+    printf("Omega_m, Omega_r = %f %f\n", Omega_m, Omega_r);
+    printf("We found %d ncdm species\n", n_ncdm);
+    printf("z = %e, \t a = %e, \t H = %e\n\n", z, a, H0);
+    printf("omega = %e, s^2 = %e, fnu = %e\n", omega, ss, fnu);
 
     /* More auxilliary quantities */
     double ktau = k*tau;
@@ -217,7 +223,7 @@ void generate_ics(const struct background *bg, double q, double k, double tau,
                       * ini_curv * ss;
     double sigma_ur = ktau*ktau / (45 + 12*fnu) * (3*ss - 1)
                       * (1 + 0.25 * (4*fnu - 5)/(2*fnu+15) * tau * omega) * ini_curv;
-    double l3_ur = ktau * ktau * 2. / (12*fnu + 45) / 7.;
+    double l3_ur = ktau * ktau * ktau * 2. / (12*fnu + 45) / 7.;
 
     /* Now calculate the initial conditions for the neutrino species */
     double M_nu = 0.2;
@@ -245,10 +251,4 @@ void generate_ics(const struct background *bg, double q, double k, double tau,
     (*Psi)[1] = - eps / (3*q*k) * theta_ur * dlnf0_dlnq;
     (*Psi)[2] = - 0.5 * sigma_ur * dlnf0_dlnq;
     (*Psi)[3] = - 0.25 * l3_ur * dlnf0_dlnq;
-
-    // **Psi + 1 = -1.;
-
-    // printf("%e %e %e\n", f0_eval, df0_dq, dlnf0_dlnq);
-
-    // printf("%f %f %f %f\n", delta_ur, theta_ur, sigma_ur, l3_ur);
 }

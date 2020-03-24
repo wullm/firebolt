@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
 
     double q = 1.0;
     double k = 1.0;
-    double tau = exp(-0.29);
+    double tau = 0.01;
     printf("[q, k, tau] = [%f, %f, %f]\n", q, k, tau);
 
     int l_max = 10;
@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
 
     generate_ics(&bg, q, k, tau, &Psi, l_max);
 
-    printf("We found %f %f %f %f %f\n", Psi[0], Psi[1], Psi[2], Psi[3], Psi[4]);
+    printf("We found %e %e %e %e %e\n", Psi[0], Psi[1], Psi[2], Psi[3], Psi[4]);
 
     free(Psi);
 
