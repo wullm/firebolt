@@ -225,6 +225,8 @@ void generate_ics(const struct background *bg, double q, double k, double tau,
                       * (1 + 0.25 * (4*fnu - 5)/(2*fnu+15) * tau * omega) * ini_curv;
     double l3_ur = ktau * ktau * ktau * 2. / (12*fnu + 45) / 7.;
 
+    // printf("%e %e %e %e\n", delta_ur, theta_ur, sigma_ur, l3_ur);
+
     /* Now calculate the initial conditions for the neutrino species */
     double M_nu = 0.2;
     double eps = hypot(q, a * M_nu);

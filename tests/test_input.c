@@ -19,7 +19,7 @@ int main() {
 
     assert(strcmp(pars.Name, "Test Simulation") == 0);
     assert(strcmp(pars.OutputDirectory, "../tests") == 0);
-    assert(strcmp(pars.BackgroundFile, "../background/class_example_background.dat") == 0);
+    assert(strcmp(pars.BackgroundFile, "../background/class_example_background.old.dat") == 0);
     assert(strcmp(pars.BackgroundFormat, "CLASS") == 0);
     assert(strcmp(pars.PerturbFile, "test_perturb.hdf5") == 0);
 

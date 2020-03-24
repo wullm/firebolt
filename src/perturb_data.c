@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <hdf5.h>
+#include <math.h>
 #include "../include/perturb_data.h"
 
 int readPerturb(struct params *pars, struct units *us, struct perturb_data *pt) {
@@ -139,6 +140,18 @@ int readPerturb(struct params *pars, struct units *us, struct perturb_data *pt) 
 
     /* Close the file */
     H5Fclose(h_file);
+
+    /* Perform unit conversions for the wavenumbers */
+    for (int i=0; i<pt->k_size; i++) {
+        pt->k[i] *= us->UnitLengthMetres / UnitLengthMetres;
+    }
+
+    /* Perform unit conversions for the conformal times */
+    for (int i=0; i<pt->tau_size; i++) {
+        pt->log_tau[i] += log(UnitTimeSeconds/us->UnitTimeSeconds);
+    }
+
+    /* The transfer functions (in the Eisenstein-Hu format) are dimensionless. */
 
     return 0;
 }

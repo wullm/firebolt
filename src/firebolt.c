@@ -46,9 +46,9 @@ int main(int argc, char *argv[]) {
     readCosmology(&cosmo, fname);
     readBackground(&pars, &us, &cosmo, &bg);
 
-    double q = 1.0;
-    double k = 1.0;
-    double tau = 0.01;
+    double q = 1;
+    double k = 10;
+    double tau = 0.1;
     printf("[q, k, tau] = [%f, %f, %f]\n", q, k, tau);
 
     int l_max = 10;
