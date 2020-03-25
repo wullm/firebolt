@@ -36,78 +36,67 @@ int main(int argc, char *argv[]) {
     const char *fname = argv[1];
     printf("The parameter file is %s\n", fname);
 
+    /* Firebolt structures */
     struct params pars;
     struct units us;
     struct cosmology cosmo;
     struct background bg;
     struct perturb_data ptdat;
 
+    /* Read parameters & data */
     readParams(&pars, fname);
     readUnits(&us, fname);
     readCosmology(&cosmo, fname);
-    readBackground(&pars, &us, &cosmo, &bg);
     readPerturb(&pars, &us, &ptdat);
+    readBackground(&pars, &us, &cosmo, &bg);
 
+    /* Initialize interpolation splines */
+    rend_interp_init(&ptdat);
+    bg_interp_init(&bg);
+
+    /* The system to solve */
     double q = 1;
-    double k = 10;
+    double k = 1;
     double tau = 0.05;
-    printf("[q, k, tau] = [%f, %f, %f]\n", q, k, tau);
+    // double final_tau = bg.functions[1][bg.nrow - 1];
+    double final_tau = 2150; //approx z=40
+    double M = 1190; //mass in units of neutrino temperature today (0.2 eV)
+    printf("[q, k, tau, z] = [%f, %f, %f, %e]\n", q, k, tau, bg_z_at_tau(log(tau)));
 
-    int l_max = 1000;
+    // final_tau = 100;
+
+    /* Size of the problem */
+    int l_max = 2000;
     double *Psi;
 
+    // for (int i=0; i<100; i++) {
+    //     double y = (i+1) * 0.01;
+    //     printf("%f %e\n", y, rend_interp(y, log(100), 1));
+    // }
+
+    /* Generate initial conditions */
     generate_ics(&bg, q, k, tau, &Psi, l_max);
 
-
+    /* Print the initial conditions */
     printf("\n\n");
     printf("%f %e %e %e %e %e\n", tau, Psi[0], Psi[1], Psi[2], Psi[3], Psi[4]);
 
-    rend_interp_init(&ptdat);
-    rend_interp_switch_source(&ptdat, 5);
-    bg_interp_init(&bg);
-
-    double final_tau = bg.functions[1][bg.nrow - 1];
-    double M = 1190; //mass in units of neutrino temperature today (0.2 eV)
-
     /* Derivative of the distribution function (5-point stencil) */
-    double h = 0.01;
-    double df0_dq = 0, dlnf0_dlnq;
+    double h = 0.0001;
+    double dlnf0_dlnq = compute_dlnf0_dlnq(q, h);
 
-    df0_dq += (1./12.) * f0(q - 2*h);
-    df0_dq -= (8./12.) * f0(q - 1*h);
-    df0_dq += (8./12.) * f0(q + 1*h);
-    df0_dq -= (1./12.) * f0(q + 2*h);
-    df0_dq /= h;
+    evolve_gsl(&Psi, &ptdat, &bg, q, k, l_max, tau, final_tau, M, dlnf0_dlnq);
+    printf("%f %e %e %e %e %e\n", final_tau, Psi[0], Psi[1], Psi[2], Psi[3], Psi[4]);
 
-    double f0_eval = f0(q);
-    if (fabs(f0_eval) > 0) {
-        dlnf0_dlnq = q/f0_eval * df0_dq;
-    } else {
-        dlnf0_dlnq = -q;
-    }
-
-    for (int i=0; i<20; i++) {
-        tau *= pow(10, 0.25);
-        final_tau = tau*pow(10, 0.25);
-        evolve(&Psi, &ptdat, &bg, q, k, l_max, tau, final_tau, M, 1000000, dlnf0_dlnq);
-        printf("%f %e %e %e %e %e\n", tau, Psi[0], Psi[1], Psi[2], Psi[3], Psi[4]);
-    }
-
-
-    // final_tau = 100;
-    //
-    // evolve(&Psi, &ptdat, &bg, q, k, l_max, tau, final_tau, M);
-    //
-    // printf("We found %e %e %e %e %e\n", Psi[0], Psi[1], Psi[2], Psi[3], Psi[4]);
+    /* Release the interpolation splines */
     bg_interp_free(&bg);
     rend_interp_free(&ptdat);
 
-
+    /* Free the integrated variables */
     free(Psi);
 
-    /* Clean up */
+    /* Clean up the remaining structures */
     cleanPerturb(&ptdat);
     cleanBackground(&bg);
     cleanParams(&pars);
-
 }

@@ -29,9 +29,24 @@ double f0(double q) {
     return 1.0/pow(2*M_PI,3)*(1./(exp(q-ksi)+1.) +1./(exp(q+ksi)+1.));
 }
 
-// double dlnf0_dlnq(double q) {
-//     return 1.0/pow(2*_PI_,3)*(1./(exp(q-ksi)+1.) +1./(exp(q+ksi)+1.));
-// }
+double compute_dlnf0_dlnq(double q, double h) {
+    double df0_dq = 0, dlnf0_dlnq;
+
+    df0_dq += (1./12.) * f0(q - 2*h);
+    df0_dq -= (8./12.) * f0(q - 1*h);
+    df0_dq += (8./12.) * f0(q + 1*h);
+    df0_dq -= (1./12.) * f0(q + 2*h);
+    df0_dq /= h;
+
+    double f0_eval = f0(q);
+    if (fabs(f0_eval) > 0) {
+        dlnf0_dlnq = q/f0_eval * df0_dq;
+    } else {
+        dlnf0_dlnq = -q;
+    }
+
+    return dlnf0_dlnq;
+}
 
 
 /* Generate initial conditions for momentum q and wavenumber k at conformal
@@ -50,7 +65,7 @@ void generate_ics(const struct background *bg, double q, double k, double tau,
     double ini_curv = 1.0;
 
     /* Find a good row */
-    int therow;
+    int therow = 0;
     for (int i=0; i<bg->nrow; i++) {
         if (bg->functions[1][i] > tau) {
             therow = i;
@@ -59,10 +74,10 @@ void generate_ics(const struct background *bg, double q, double k, double tau,
     }
 
     /* Scan for the appropriate column titles */
-    int id_rho_crit, id_rho_tot, id_H;
-    int id_rho_g, id_rho_b, id_rho_cdm, id_rho_ur;
-    int id_rho_idr, id_rho_idm_dr, id_rho_scf, id_rho_dr, id_rho_dcdm;
-    int id_p_scf;
+    int id_rho_crit = 0, id_rho_tot = 0, id_H = 0;
+    int id_rho_g = 0, id_rho_b = 0, id_rho_cdm = 0, id_rho_ur = 0;
+    int id_rho_idr = 0, id_rho_idm_dr = 0, id_rho_scf = 0, id_rho_dr = 0;
+    int id_p_scf = 0, id_rho_dcdm = 0;
     char has_cdm = 0, has_ur = 0, has_idr = 0, has_idm_dr = 0, has_scf = 0;
     char has_dr = 0, has_dcdm = 0;
     /* Count number ncdm species among the columns */
@@ -233,20 +248,7 @@ void generate_ics(const struct background *bg, double q, double k, double tau,
 
     /* Derivative of the distribution function */
     double h = 0.01;
-    double df0_dq = 0, dlnf0_dlnq;
-
-    df0_dq += (1./12.) * f0(q - 2*h);
-    df0_dq -= (8./12.) * f0(q - 1*h);
-    df0_dq += (8./12.) * f0(q + 1*h);
-    df0_dq -= (1./12.) * f0(q + 2*h);
-    df0_dq /= h;
-
-    double f0_eval = f0(q);
-    if (fabs(f0_eval) > 0) {
-        dlnf0_dlnq = q/f0_eval * df0_dq;
-    } else {
-        dlnf0_dlnq = -q;
-    }
+    double dlnf0_dlnq = compute_dlnf0_dlnq(q, h);
 
     /* Calculate the Psi's */
     (*Psi)[0] = - 0.25 * delta_ur * dlnf0_dlnq;
