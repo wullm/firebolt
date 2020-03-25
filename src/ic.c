@@ -145,7 +145,7 @@ void generate_ics(const struct background *bg, double q, double k, double tau,
 
     /* Densities */
     double rho_crit = bg->functions[id_rho_crit][therow];
-    double rho_tot = bg->functions[id_rho_tot][therow];
+    // double rho_tot = bg->functions[id_rho_tot][therow];
 
     /* Densities today */
     double rho_crit0 = bg->functions[id_rho_crit][bg->nrow - 1];
@@ -208,10 +208,10 @@ void generate_ics(const struct background *bg, double q, double k, double tau,
     /* Fraction of relics in radiation density */
     double fnu = rho_nu/rho_r;
 
-    printf("Omega_m, Omega_r = %f %f\n", Omega_m, Omega_r);
-    printf("We found %d ncdm species\n", n_ncdm);
-    printf("z = %e, \t a = %e, \t H = %e\n\n", z, a, H0);
-    printf("omega = %e, s^2 = %e, fnu = %e\n", omega, ss, fnu);
+    // printf("Omega_m, Omega_r = %f %f\n", Omega_m, Omega_r);
+    // printf("We found %d ncdm species\n", n_ncdm);
+    // printf("z = %e, \t a = %e, \t H = %e\n\n", z, a, H0);
+    // printf("omega = %e, s^2 = %e, fnu = %e\n", omega, ss, fnu);
 
     /* More auxilliary quantities */
     double ktau = k*tau;

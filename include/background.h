@@ -24,6 +24,7 @@
 
 struct background {
     double *z;
+    double *log_tau;
     double **functions;
     char **titles;
     long int nrow;

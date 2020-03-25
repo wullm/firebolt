@@ -17,19 +17,14 @@
  *
  ******************************************************************************/
 
-#ifndef DEXM_H
-#define DEXM_H
+#ifndef EVOLVE_H
+#define EVOLVE_H
 
-#include "input.h"
-#include "background.h"
-#include "background_interp.h"
 #include "perturb_data.h"
-#include "perturb_interp.h"
-#include "ic.h"
-#include "evolve.h"
+#include "background.h"
 
-#define TXT_RED "\033[31;1m"
-#define TXT_GREEN "\033[32;1m"
-#define TXT_RESET "\033[0m"
+int evolve(double **Psi, const struct perturb_data *ptdat, const struct background *bg,
+           double q, double k, int l_max, double tau_ini, double tau_final, double M,
+           int steps, double dlnf0_dlnq);
 
 #endif

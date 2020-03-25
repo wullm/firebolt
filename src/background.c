@@ -161,6 +161,7 @@ int readBackground(const struct params *pars, const struct units *us,
 
     /* Allocate memory for the background data */
     bg->z = malloc(nrow * sizeof(double));
+    bg->log_tau = malloc(nrow * sizeof(double));
     bg->functions = malloc(ncol * sizeof(double*));
     for (int i=0; i<ncol; i++) {
         bg->functions[i] = malloc(nrow * sizeof(double));
@@ -217,6 +218,11 @@ int readBackground(const struct params *pars, const struct units *us,
             bg->functions[j][i] /= density_factor * mpc_time_factor * mpc_time_factor;
         }
         /* These last two columns are dimensionless growth factors */
+    }
+
+    /* Create the log-tau table */
+    for (int i=0; i<nrow; i++) {
+        bg->log_tau[i] = log(bg->functions[1][i]);
     }
 
     return 0;
