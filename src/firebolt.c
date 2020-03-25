@@ -67,33 +67,43 @@ int main(int argc, char *argv[]) {
 
     /* Size of the problem */
     int l_max = 2000;
-    double *Psi;
+
 
     // for (int i=0; i<100; i++) {
     //     double y = (i+1) * 0.01;
     //     printf("%f %e\n", y, rend_interp(y, log(100), 1));
     // }
 
-    /* Generate initial conditions */
-    generate_ics(&bg, q, k, tau, &Psi, l_max);
+    double q_max = 15.;
+    int q_steps = 100;
 
-    /* Print the initial conditions */
-    printf("\n\n");
-    printf("%f %e %e %e %e %e\n", tau, Psi[0], Psi[1], Psi[2], Psi[3], Psi[4]);
+    for (int j=0; j<q_steps; j++) {
+        double *Psi;
 
-    /* Derivative of the distribution function (5-point stencil) */
-    double h = 0.0001;
-    double dlnf0_dlnq = compute_dlnf0_dlnq(q, h);
+        double q = (j+1) * q_max/q_steps;
 
-    evolve_gsl(&Psi, &ptdat, &bg, q, k, l_max, tau, final_tau, M, dlnf0_dlnq);
-    printf("%f %e %e %e %e %e\n", final_tau, Psi[0], Psi[1], Psi[2], Psi[3], Psi[4]);
+        /* Generate initial conditions */
+        generate_ics(&bg, q, k, tau, &Psi, l_max);
+
+        /* Print the initial conditions */
+        // printf("\n\n");
+        // printf("%f %e %e %e %e %e\n", tau, Psi[0], Psi[1], Psi[2], Psi[3], Psi[4]);
+
+        /* Derivative of the distribution function (5-point stencil) */
+        double h = 0.0001;
+        double dlnf0_dlnq = compute_dlnf0_dlnq(q, h);
+        double f0_eval = f0(q);
+
+        evolve_gsl(&Psi, &ptdat, &bg, q, k, l_max, tau, final_tau, M, dlnf0_dlnq);
+        printf("%f %e %e %e %e %e\n", q, Psi[0], Psi[1], Psi[2], Psi[3], Psi[4]);
+
+        /* Free the integrated variables */
+        free(Psi);
+    }
 
     /* Release the interpolation splines */
     bg_interp_free(&bg);
     rend_interp_free(&ptdat);
-
-    /* Free the integrated variables */
-    free(Psi);
 
     /* Clean up the remaining structures */
     cleanPerturb(&ptdat);
