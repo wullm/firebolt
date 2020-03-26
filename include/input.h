@@ -26,6 +26,8 @@
 #define SPEED_OF_LIGHT_METRES_SECONDS 2.99792e8
 #define GYR_OVER_MPC 3.06601394e2
 #define GRAVITY_G_SI_UNITS 6.67428e-11 // m^3 / kg / s^2
+#define PLANCK_CONST_SI_UNITS 6.62607015e-34 //J s
+#define BOLTZMANN_CONST_SI_UNITS 1.380649e-23 //J / K
 
 /* The .ini parser library is minIni */
 #include "../parser/minIni.h"
@@ -37,6 +39,10 @@ struct params {
     char *BackgroundFormat;
     char *PerturbFile;
 
+    int MaxMultipole;
+    int NumberMomentumBins;
+    double MaxMomentum;
+
     /* Output parameters */
     char *OutputDirectory;
 };
@@ -45,10 +51,13 @@ struct units {
     double UnitLengthMetres;
     double UnitTimeSeconds;
     double UnitMassKilogram;
+    double UnitTemperatureKelvin;
 
     /* Physical constants in internal units */
     double SpeedOfLight;
     double GravityG;
+    double hPlanck;
+    double kBoltzmann;
 
     /* Units for the transfer function input data */
     double BackgroundUnitLengthMetres;
@@ -56,6 +65,7 @@ struct units {
 
 struct cosmology {
     double h;
+    double T_nu0;
 };
 
 int readParams(struct params *parser, const char *fname);

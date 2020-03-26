@@ -28,16 +28,19 @@
 /* GSL interpolation objects */
 const gsl_interp_type *bg_interp_type;
 gsl_interp_accel *bg_tau_acc;
-gsl_spline *bg_spline;
+gsl_spline *bg_z_spline;
+gsl_spline *bg_func_spline;
 
 int bg_interp_init(const struct background *bg) {
     /* We will use linear interpolation in log-tau space */
     bg_interp_type = gsl_interp_linear;
 
-    /* Allocate memory for the spline */
-    bg_spline = gsl_spline_alloc(bg_interp_type, bg->nrow);
-    /* Note: this only copies the first transfer function from bg->delta */
-    gsl_spline_init(bg_spline, bg->log_tau, bg->z, bg->nrow);
+    /* Allocate memory for the splines */
+    bg_func_spline = gsl_spline_alloc(bg_interp_type, bg->nrow);
+    bg_z_spline = gsl_spline_alloc(bg_interp_type, bg->nrow);
+    /* Note: this only copies the first function from bg->functions */
+    gsl_spline_init(bg_func_spline, bg->log_tau, bg->functions[0], bg->nrow);
+    gsl_spline_init(bg_z_spline, bg->log_tau, bg->z, bg->nrow);
 
 
     /* Allocate memory for the accelerator objects */
@@ -46,14 +49,32 @@ int bg_interp_init(const struct background *bg) {
   return 0;
 }
 
+int bg_interp_switch_func(const struct background *bg, int index_func) {
+    /* The array bg->functions contains an array of all background functions,
+    * each of size bg->nrow doubles */
+    int chunk_size = bg->nrow;
+
+    /* Copy the desired background function to the spline */
+    double *destination = bg_func_spline->y;
+    double *source_address = bg->functions[index_func];
+    memcpy(destination, source_address, chunk_size * sizeof(double));
+
+    return 0;
+}
+
 int bg_interp_free(const struct background *bg) {
     /* Done with the GSL interpolation */
-    gsl_spline_free(bg_spline);
+    gsl_spline_free(bg_z_spline);
+    gsl_spline_free(bg_func_spline);
     gsl_interp_accel_free(bg_tau_acc);
 
     return 0;
 }
 
-double bg_z_at_tau(double log_tau) {
-    return gsl_spline_eval(bg_spline, log_tau, bg_tau_acc);
+double bg_func_at_log_tau(double log_tau) {
+    return gsl_spline_eval(bg_func_spline, log_tau, bg_tau_acc);
+}
+
+double bg_z_at_log_tau(double log_tau) {
+    return gsl_spline_eval(bg_z_spline, log_tau, bg_tau_acc);
 }

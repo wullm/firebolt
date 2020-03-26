@@ -39,6 +39,10 @@ int readParams(struct params *pars, const char *fname) {
      ini_gets("Background", "Format", "Plain", pars->BackgroundFormat, len, fname);
      ini_gets("PerturbData", "File", "", pars->PerturbFile, len, fname);
 
+     pars->MaxMultipole = ini_getl("Simulation", "MaxMultipole", 50, fname);
+     pars->MaxMomentum = ini_getd("Simulation", "MaxMomentum", 15, fname);
+     pars->NumberMomentumBins = ini_getl("Simulation", "NumberMomentumBins", 28, fname);
+
      return 0;
 }
 
@@ -47,6 +51,7 @@ int readUnits(struct units *us, const char *fname) {
     us->UnitLengthMetres = ini_getd("Units", "UnitLengthMetres", 1.0, fname);
     us->UnitTimeSeconds = ini_getd("Units", "UnitTimeSeconds", 1.0, fname);
     us->UnitMassKilogram = ini_getd("Units", "UnitMassKilogram", 1.0, fname);
+    us->UnitTemperatureKelvin = ini_getd("Units", "UnitTemperatureKelvin", 1.0, fname);
 
     /* Physical constants */
     us->SpeedOfLight = SPEED_OF_LIGHT_METRES_SECONDS * us->UnitTimeSeconds
@@ -54,6 +59,11 @@ int readUnits(struct units *us, const char *fname) {
     us->GravityG = GRAVITY_G_SI_UNITS * us->UnitTimeSeconds * us->UnitTimeSeconds
                     / us->UnitLengthMetres / us->UnitLengthMetres / us->UnitLengthMetres
                     * us->UnitMassKilogram; // m^3 / kg / s^2 to internal
+    us->hPlanck = PLANCK_CONST_SI_UNITS / us->UnitMassKilogram / us->UnitLengthMetres
+                    / us->UnitLengthMetres * us->UnitTimeSeconds; //J*s = kg*m^2/s
+    us->kBoltzmann = BOLTZMANN_CONST_SI_UNITS / us->UnitMassKilogram / us->UnitLengthMetres
+                    / us->UnitLengthMetres * us->UnitTimeSeconds * us->UnitTimeSeconds
+                    * us->UnitTemperatureKelvin; //J/K = kg*m^2/s^2/K
 
     us->BackgroundUnitLengthMetres = ini_getd("TransferFunctions", "UnitLengthMetres", MPC_METRES, fname);
 
@@ -62,6 +72,7 @@ int readUnits(struct units *us, const char *fname) {
 
 int readCosmology(struct cosmology *cosmo, const char *fname) {
      cosmo->h = ini_getd("Cosmology", "h", 0.70, fname);
+     cosmo->T_nu0 = ini_getd("Cosmology", "T_nu0", 1.951757805, fname);
 
      return 0;
 }

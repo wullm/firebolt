@@ -51,8 +51,8 @@ double compute_dlnf0_dlnq(double q, double h) {
 
 /* Generate initial conditions for momentum q and wavenumber k at conformal
  * time tau */
-void generate_ics(const struct background *bg, double q, double k, double tau,
-                  double **Psi, int l_max) {
+ void generate_ics(const struct background *bg, const struct background_title_ids *bti,
+                   double q, double k, double tau, double **Psi, int l_max) {
 
     /* Only Psi_0 through Psi_3 will have non-zero values at early times */
     /* Allocate and initialize all Psi's at 0. */
@@ -73,98 +73,21 @@ void generate_ics(const struct background *bg, double q, double k, double tau,
         }
     }
 
-    /* Scan for the appropriate column titles */
-    int id_rho_crit = 0, id_rho_tot = 0, id_H = 0;
-    int id_rho_g = 0, id_rho_b = 0, id_rho_cdm = 0, id_rho_ur = 0;
-    int id_rho_idr = 0, id_rho_idm_dr = 0, id_rho_scf = 0, id_rho_dr = 0;
-    int id_p_scf = 0, id_rho_dcdm = 0;
-    char has_cdm = 0, has_ur = 0, has_idr = 0, has_idm_dr = 0, has_scf = 0;
-    char has_dr = 0, has_dcdm = 0;
-    /* Count number ncdm species among the columns */
-    int n_ncdm = 0;
-    for (int i=0; i<bg->ncol; i++) {
-        char word[50];
-        sscanf(bg->titles[i], "%s", word);
-
-        if (strcmp(word, "H") == 0) {
-            id_H = i;
-        } else if (strcmp(word, "(.)rho_crit") == 0) {
-            id_rho_crit = i;
-        } else if (strcmp(word, "(.)rho_tot") == 0) {
-            id_rho_tot = i;
-        } else if (strcmp(word, "(.)rho_g") == 0) {
-            id_rho_g = i;
-        } else if (strcmp(word, "(.)rho_b") == 0) {
-            id_rho_b = i;
-        } else if (strcmp(word, "(.)rho_cdm") == 0) {
-            has_cdm = 1;
-            id_rho_cdm = i;
-        } else if (strcmp(word, "(.)rho_ur") == 0) {
-            has_ur = 1;
-            id_rho_ur = i;
-        } else if (strcmp(word, "(.)rho_idr") == 0) {
-            has_idr = 1;
-            id_rho_idr = i;
-        } else if (strcmp(word, "(.)rho_idm_dr") == 0) {
-            has_idm_dr = 1;
-            id_rho_idm_dr = i;
-        } else if (strcmp(word, "(.)rho_scf") == 0) {
-            has_scf = 1;
-            id_rho_scf = i;
-        } else if (strcmp(word, "(.)rho_dr") == 0) {
-            has_dr = 1;
-            id_rho_dr = i;
-        } else if (strcmp(word, "(.)rho_dcdm") == 0) {
-            has_dcdm = 1;
-            id_rho_dcdm = i;
-        } else if (strcmp(word, "(.)p_scf") == 0) {
-            has_scf = 1;
-            id_p_scf = i;
-        }
-
-        /* Look for ncdm density columns */
-        int ncdm_num;
-        if (sscanf(bg->titles[i], "(.)rho_ncdm[%d]", &ncdm_num) > 0) {
-            n_ncdm++;
-        }
-    }
-
-    /* Scan for ncdm columns */
-    int *id_rho_ncdm = malloc(n_ncdm * sizeof(int));
-    int *id_p_ncdm = malloc(n_ncdm * sizeof(int));
-    for (int i=0; i<bg->ncol; i++) {
-        char word[50];
-        sscanf(bg->titles[i], "%s", word);
-
-        for (int j = 0; j<n_ncdm; j++) {
-            char search_rho[50];
-            char search_p[50];
-            sprintf(search_rho, "(.)rho_ncdm[%d]", j);
-            sprintf(search_p, "(.)p_ncdm[%d]", j);
-
-            if (strcmp(word, search_rho) == 0) {
-                id_rho_ncdm[j] = i;
-            } else if (strcmp(word, search_p) == 0) {
-                id_p_ncdm[j] = i;
-            }
-        }
-    }
-
     /* Hubble constant today and at tau */
-    double H0 = bg->functions[id_H - 1][bg->nrow - 1];
-    double H = bg->functions[id_H - 1][therow];
+    double H0 = bg->functions[bti->id_H][bg->nrow - 1];
+    double H = bg->functions[bti->id_H][therow];
 
     /* Scale factor and redshift */
     double z = bg->z[therow];
     double a = 1.0/(1+z);
 
     /* Densities */
-    double rho_crit = bg->functions[id_rho_crit][therow];
-    // double rho_tot = bg->functions[id_rho_tot][therow];
+    double rho_crit = bg->functions[bti->id_rho_crit][therow];
+    // double rho_tot = bg->functions[bti->id_rho_tot][therow];
 
     /* Densities today */
-    double rho_crit0 = bg->functions[id_rho_crit][bg->nrow - 1];
-    double rho_tot0 = bg->functions[id_rho_tot][bg->nrow - 1];
+    double rho_crit0 = bg->functions[bti->id_rho_crit][bg->nrow - 1];
+    double rho_tot0 = bg->functions[bti->id_rho_tot][bg->nrow - 1];
 
     /* Curvature parameter */
     double Omega_k0 = (rho_crit0 - rho_tot0)/rho_crit0;
@@ -174,27 +97,27 @@ void generate_ics(const struct background *bg, double q, double k, double tau,
     double rho_m = 0, rho_r = 0;
 
     /* Photons */
-    rho_r += bg->functions[id_rho_g-1][therow];
+    rho_r += bg->functions[bti->id_rho_g][therow];
     /* Baryons */
-    rho_m += bg->functions[id_rho_b-1][therow];
+    rho_m += bg->functions[bti->id_rho_b][therow];
     /* CDM */
-    if (has_cdm) rho_m += bg->functions[id_rho_cdm-1][therow];
+    if (bti->has_cdm) rho_m += bg->functions[bti->id_rho_cdm][therow];
     /* Decaying dark matter, dark radiation */
-    if (has_dcdm) rho_m += bg->functions[id_rho_dcdm-1][therow];
-    if (has_dr) rho_r += bg->functions[id_rho_dr-1][therow];
+    if (bti->has_dcdm) rho_m += bg->functions[bti->id_rho_dcdm][therow];
+    if (bti->has_dr) rho_r += bg->functions[bti->id_rho_dr][therow];
     /* Scalar field (rho_r += 3P, rho_m += rho - 3P)*/
-    if (has_scf) rho_r += 3 * bg->functions[id_p_scf-1][therow];
-    if (has_scf) rho_m += bg->functions[id_rho_scf-1][therow] - 3 * bg->functions[id_p_scf-1][therow];
+    if (bti->has_scf) rho_r += 3 * bg->functions[bti->id_p_scf][therow];
+    if (bti->has_scf) rho_m += bg->functions[bti->id_rho_scf][therow] - 3 * bg->functions[bti->id_p_scf][therow];
     /* Ultra-relativistic species */
-    if (has_ur) rho_r += bg->functions[id_rho_ur-1][therow];
+    if (bti->has_ur) rho_r += bg->functions[bti->id_rho_ur][therow];
     /* Interacting dark matter and radiation */
-    if (has_idm_dr) rho_m += bg->functions[id_rho_idm_dr-1][therow];
-    if (has_idr) rho_r += bg->functions[id_rho_idr-1][therow];
+    if (bti->has_idm_dr) rho_m += bg->functions[bti->id_rho_idm_dr][therow];
+    if (bti->has_idr) rho_r += bg->functions[bti->id_rho_idr][therow];
     /* Massive neutrinos */
-    for (int i=0; i<n_ncdm; i++) {
+    for (int i=0; i<bti->n_ncdm; i++) {
         /* Radiation contribution is 3P, density contribution is rho - 3P. */
-        rho_r += 3 * bg->functions[id_p_ncdm[i]-1][therow];
-        rho_m += bg->functions[id_rho_ncdm[i]-1][therow] - 3 * bg->functions[id_p_ncdm[i]-1][therow];
+        rho_r += 3 * bg->functions[bti->id_p_ncdm[i]][therow];
+        rho_m += bg->functions[bti->id_rho_ncdm[i]][therow] - 3 * bg->functions[bti->id_p_ncdm[i]][therow];
     }
 
     /* Matter and radiation density parameters */
@@ -211,13 +134,13 @@ void generate_ics(const struct background *bg, double q, double k, double tau,
 
     /* Contribution of neutrinos and relativistic collisionless relics */
     double rho_nu = 0;
-    if (has_dr) rho_nu += bg->functions[id_rho_dr-1][therow];
-    if (has_ur) rho_nu += bg->functions[id_rho_ur-1][therow];
-    if (has_idr) rho_nu += bg->functions[id_rho_idr-1][therow];
+    if (bti->has_dr) rho_nu += bg->functions[bti->id_rho_dr][therow];
+    if (bti->has_ur) rho_nu += bg->functions[bti->id_rho_ur][therow];
+    if (bti->has_idr) rho_nu += bg->functions[bti->id_rho_idr][therow];
     /* Massive neutrinos */
-    for (int i=0; i<n_ncdm; i++) {
+    for (int i=0; i<bti->n_ncdm; i++) {
         /* Radiation contribution is 3P, density contribution is rho - 3P. */
-        rho_nu += bg->functions[id_rho_ncdm[i]-1][therow];
+        rho_nu += bg->functions[bti->id_rho_ncdm[i]][therow];
     }
 
     /* Fraction of relics in radiation density */

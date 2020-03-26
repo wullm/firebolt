@@ -24,8 +24,8 @@
 
 /* Generate initial conditions for momentum q and wavenumber k at conformal
  * time tau */
-void generate_ics(const struct background *bg, double q, double k, double tau,
-                   double **Psi, int l_max);
+void generate_ics(const struct background *bg, const struct background_title_ids *bti,
+                  double q, double k, double tau, double **Psi, int l_max);
 double f0(double q);
 double compute_dlnf0_dlnq(double q, double h);
 

@@ -31,6 +31,26 @@ struct background {
     int ncol;
 };
 
+struct background_title_ids {
+    /* Ids of various background functions f(tau) */
+    int id_rho_crit, id_rho_tot, id_H;
+    int id_rho_g, id_rho_b, id_rho_cdm, id_rho_ur;
+    int id_rho_idr, id_rho_idm_dr, id_rho_scf, id_rho_dr;
+    int id_p_scf, id_rho_dcdm;
+    int id_p_tot;
+
+    /* Whether these components are present in the table */
+    char has_cdm, has_ur, has_idr, has_idm_dr, has_scf;
+    char has_dr, has_dcdm;
+
+    /* Number of ncdm species */
+    int n_ncdm;
+
+    /* Ids of the density and pressure functions for each ncdm species */
+    int *id_rho_ncdm;
+    int *id_p_ncdm;
+};
+
 enum background_format {
     Plain,
     CLASS
@@ -39,5 +59,7 @@ enum background_format {
 int readBackground(const struct params *pars, const struct units *us,
                    const struct cosmology *cosmo, struct background *bg);
 int cleanBackground(struct background *bg);
-
+int parseBackgroundTitles(const struct background *bg,
+                          struct background_title_ids *bti);
+int cleanBackgroundTitles(struct background_title_ids *bti);
 #endif

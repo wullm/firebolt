@@ -156,13 +156,28 @@ int readPerturb(struct params *pars, struct units *us, struct perturb_data *pt) 
     /* Perform unit conversions for velocity dispersion transfer functions,
      * which have dimension inverse time, as opposed to most other transfer
      * functions, which correspond to dimensionless quantities.
+     * Do the same for functions that are time derivatives.
      */
     for (int i=0; i<pt->n_functions; i++) {
-        /* These have titles starting with "t_" */
-        if (pt->titles[i][0] == 't' && pt->titles[i][1] == '_') {
+        char dim_inv_time = 0;
+        char *title_end = &pt->titles[i][strlen(pt->titles[i])];
+
+        /* Velocity dispersion functions have titles starting with "t_" */
+        if (strncmp(pt->titles[i], "t_", 2) == 0) {
+            dim_inv_time = 1;
+        }
+
+        /* Time derivatives have titles ending in "_prime" */
+        else if (strncmp(title_end-6, "_prime", 6) == 0) {
+                dim_inv_time = 1;
+        }
+
+        /* If the function has dimension of 1/time, do the conversion */
+        if (dim_inv_time) {
             for (int index_k=0; index_k<pt->k_size; index_k++) {
                 for (int index_tau=0; index_tau<pt->tau_size; index_tau++) {
-                    pt->delta[pt->tau_size * pt->k_size * i + pt->k_size * index_tau + index_k] /= unit_time_factor;
+                    int index = pt->tau_size * pt->k_size * i + pt->k_size * index_tau + index_k;
+                    pt->delta[index] /= unit_time_factor;
                 }
             }
         }

@@ -134,6 +134,8 @@ int readBackground(const struct params *pars, const struct units *us,
         return 1;
     }
 
+    printf("Reading the background data from '%s'.\n", pars->BackgroundFile);
+
     /* Open the data file */
     FILE *f = fopen(fname, "r");
     char line[2000];
@@ -234,5 +236,105 @@ int cleanBackground(struct background *bg) {
     free(bg->functions);
     free(bg->z);
 
+    return 0;
+}
+char has_cdm, has_ur, has_idr, has_idm_dr, has_scf;
+char has_dr, has_dcdm;
+
+
+int parseBackgroundTitles(const struct background *bg,
+                          struct background_title_ids *bti) {
+
+    /* Reset the indicators */
+    bti->has_cdm = 0;
+    bti->has_ur = 0;
+    bti->has_idr = 0;
+    bti->has_idm_dr = 0;
+    bti->has_scf = 0;
+    bti->has_dr = 0;
+    bti->has_dcdm = 0;
+
+    /* Parse the background function titles for known ids  and
+     * count the number ncdm species among the columns. */
+    bti->n_ncdm = 0;
+    for (int i=0; i<bg->ncol; i++) {
+        char word[50];
+        sscanf(bg->titles[i], "%s", word);
+
+        /* Note, we assign id = i-1, because the first column is
+         * the redshift column, which is treated separately. */
+
+        if (strcmp(word, "H") == 0) {
+            bti->id_H = i-1;
+        } else if (strcmp(word, "(.)rho_crit") == 0) {
+            bti->id_rho_crit = i-1;
+        } else if (strcmp(word, "(.)rho_tot") == 0) {
+            bti->id_rho_tot = i-1;
+        } else if (strcmp(word, "(.)rho_g") == 0) {
+            bti->id_rho_g = i-1;
+        } else if (strcmp(word, "(.)rho_b") == 0) {
+            bti->id_rho_b = i-1;
+        } else if (strcmp(word, "(.)rho_cdm") == 0) {
+            bti->has_cdm = 1;
+            bti->id_rho_cdm = i-1;
+        } else if (strcmp(word, "(.)rho_ur") == 0) {
+            bti->has_ur = 1;
+            bti->id_rho_ur = i-1;
+        } else if (strcmp(word, "(.)rho_idr") == 0) {
+            bti->has_idr = 1;
+            bti->id_rho_idr = i-1;
+        } else if (strcmp(word, "(.)rho_idm_dr") == 0) {
+            bti->has_idm_dr = 1;
+            bti->id_rho_idm_dr = i-1;
+        } else if (strcmp(word, "(.)rho_scf") == 0) {
+            bti->has_scf = 1;
+            bti->id_rho_scf = i-1;
+        } else if (strcmp(word, "(.)rho_dr") == 0) {
+            bti->has_dr = 1;
+            bti->id_rho_dr = i-1;
+        } else if (strcmp(word, "(.)rho_dcdm") == 0) {
+            bti->has_dcdm = 1;
+            bti->id_rho_dcdm = i-1;
+        } else if (strcmp(word, "(.)p_scf") == 0) {
+            bti->has_scf = 1;
+            bti->id_p_scf = i-1;
+        } else if (strcmp(word, "(.)p_tot") == 0) {
+            bti->id_p_tot = i-1;
+        }
+
+        /* Look for ncdm density columns (ids are assigned later) */
+        int ncdm_num;
+        if (sscanf(bg->titles[i], "(.)rho_ncdm[%d]", &ncdm_num) > 0) {
+            bti->n_ncdm++;
+        }
+    }
+
+    /* Scan for ncdm columns */
+    bti->id_rho_ncdm = malloc(bti->n_ncdm * sizeof(int));
+    bti->id_p_ncdm = malloc(bti->n_ncdm * sizeof(int));
+    for (int i=0; i<bg->ncol; i++) {
+        char word[50];
+        sscanf(bg->titles[i], "%s", word);
+
+        for (int j = 0; j<bti->n_ncdm; j++) {
+            char search_rho[50];
+            char search_p[50];
+            sprintf(search_rho, "(.)rho_ncdm[%d]", j);
+            sprintf(search_p, "(.)p_ncdm[%d]", j);
+
+            if (strcmp(word, search_rho) == 0) {
+                bti->id_rho_ncdm[j] = i-1;
+            } else if (strcmp(word, search_p) == 0) {
+                bti->id_p_ncdm[j] = i-1;
+            }
+        }
+    }
+
+    return 0;
+}
+
+int cleanBackgroundTitles(struct background_title_ids *bti) {
+    free(bti->id_rho_ncdm);
+    free(bti->id_p_ncdm);
     return 0;
 }

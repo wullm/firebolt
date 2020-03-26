@@ -23,7 +23,9 @@
 #include "background.h"
 
 int bg_interp_init(const struct background *bg);
+int bg_interp_switch_func(const struct background *bg, int index_func);
 int bg_interp_free(const struct background *bg);
-double bg_z_at_tau(double log_tau);
+double bg_func_at_log_tau(double log_tau);
+double bg_z_at_log_tau(double log_tau);
 
 #endif
