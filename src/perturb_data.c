@@ -151,6 +151,23 @@ int readPerturb(struct params *pars, struct units *us, struct perturb_data *pt) 
         pt->log_tau[i] += log(UnitTimeSeconds/us->UnitTimeSeconds);
     }
 
+    double unit_time_factor = UnitTimeSeconds/us->UnitTimeSeconds;
+
+    /* Perform unit conversions for velocity dispersion transfer functions,
+     * which have dimension inverse time, as opposed to most other transfer
+     * functions, which correspond to dimensionless quantities.
+     */
+    for (int i=0; i<pt->n_functions; i++) {
+        /* These have titles starting with "t_" */
+        if (pt->titles[i][0] == 't' && pt->titles[i][1] == '_') {
+            for (int index_k=0; index_k<pt->k_size; index_k++) {
+                for (int index_tau=0; index_tau<pt->tau_size; index_tau++) {
+                    pt->delta[pt->tau_size * pt->k_size * i + pt->k_size * index_tau + index_k] /= unit_time_factor;
+                }
+            }
+        }
+    }
+
     /* The transfer functions (in the Eisenstein-Hu format) are dimensionless. */
 
     return 0;
