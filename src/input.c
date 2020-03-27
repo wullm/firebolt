@@ -42,6 +42,7 @@ int readParams(struct params *pars, const char *fname) {
      pars->MaxMultipole = ini_getl("Simulation", "MaxMultipole", 50, fname);
      pars->MaxMomentum = ini_getd("Simulation", "MaxMomentum", 15, fname);
      pars->NumberMomentumBins = ini_getl("Simulation", "NumberMomentumBins", 28, fname);
+     pars->InitialTime = ini_getd("Simulation", "InitialTime", 0.05, fname);
 
      return 0;
 }
@@ -64,6 +65,10 @@ int readUnits(struct units *us, const char *fname) {
     us->kBoltzmann = BOLTZMANN_CONST_SI_UNITS / us->UnitMassKilogram / us->UnitLengthMetres
                     / us->UnitLengthMetres * us->UnitTimeSeconds * us->UnitTimeSeconds
                     * us->UnitTemperatureKelvin; //J/K = kg*m^2/s^2/K
+    us->ElectronVolt = ELECTRONVOLT_SI_UNITS / us->UnitMassKilogram / us->UnitLengthMetres
+                    / us->UnitLengthMetres * us->UnitTimeSeconds
+                    * us->UnitTimeSeconds; // J = kg*m^2/s^2
+
 
     us->BackgroundUnitLengthMetres = ini_getd("TransferFunctions", "UnitLengthMetres", MPC_METRES, fname);
 
@@ -73,6 +78,7 @@ int readUnits(struct units *us, const char *fname) {
 int readCosmology(struct cosmology *cosmo, const char *fname) {
      cosmo->h = ini_getd("Cosmology", "h", 0.70, fname);
      cosmo->T_nu0 = ini_getd("Cosmology", "T_nu0", 1.951757805, fname);
+     cosmo->M_nu = ini_getd("Cosmology", "M_nu", 0.02, fname);
 
      return 0;
 }

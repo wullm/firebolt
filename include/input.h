@@ -28,6 +28,7 @@
 #define GRAVITY_G_SI_UNITS 6.67428e-11 // m^3 / kg / s^2
 #define PLANCK_CONST_SI_UNITS 6.62607015e-34 //J s
 #define BOLTZMANN_CONST_SI_UNITS 1.380649e-23 //J / K
+#define ELECTRONVOLT_SI_UNITS 1.602176634e-19 // J
 
 /* The .ini parser library is minIni */
 #include "../parser/minIni.h"
@@ -42,6 +43,7 @@ struct params {
     int MaxMultipole;
     int NumberMomentumBins;
     double MaxMomentum;
+    double InitialTime;
 
     /* Output parameters */
     char *OutputDirectory;
@@ -58,6 +60,7 @@ struct units {
     double GravityG;
     double hPlanck;
     double kBoltzmann;
+    double ElectronVolt;
 
     /* Units for the transfer function input data */
     double BackgroundUnitLengthMetres;
@@ -66,6 +69,7 @@ struct units {
 struct cosmology {
     double h;
     double T_nu0;
+    double M_nu;
 };
 
 int readParams(struct params *parser, const char *fname);

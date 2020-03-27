@@ -59,14 +59,15 @@ int main(int argc, char *argv[]) {
     /* The system to solve */
     // double q = 1;
     double k = 0.5;
-    double tau_ini = 0.05;
+    double tau_ini = pars.InitialTime;
     // double final_tau = bg.functions[1][bg.nrow - 1];
     double final_tau = 2150; //approx z=40
-    double M = 1189.133740; //mass in units of neutrino temperature today (0.2 eV)
-    printf("[k, tau_ini, z] = [%f, %f, %e]\n", k, tau_ini, bg_z_at_log_tau(log(tau_ini)));
+    double M = cosmo.M_nu * us.ElectronVolt / (cosmo.T_nu0 * us.kBoltzmann);
 
     /* Size of the problem */
     int l_max = pars.MaxMultipole;
+    double q_max = pars.MaxMomentum;
+    int q_steps = pars.NumberMomentumBins;
 
     // rend_interp_switch_source(&ptdat, 4, 0);
     // rend_interp_switch_source(&ptdat, 5, 1);
@@ -81,10 +82,9 @@ int main(int argc, char *argv[]) {
     //
     // printf("So far so good\t z=%f\n", bg_z_at_log_tau(log(80.)));
 
-    double q_max = pars.MaxMomentum;
-    int q_steps = pars.NumberMomentumBins;
-
-    printf("[l_max, q_steps, q_max] = [%d, %d, %f]\n", l_max, q_steps, q_max);
+    printf("\n");
+    printf("[k, tau_ini, z] = [%f, %f, %e]\n", k, tau_ini, bg_z_at_log_tau(log(tau_ini)));
+    printf("[l_max, q_steps, q_max] = [%d, %d, %.1f]\n", l_max, q_steps, q_max);
     printf("\n");
 
     double z = bg_z_at_log_tau(log(final_tau));
