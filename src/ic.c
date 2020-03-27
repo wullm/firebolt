@@ -56,7 +56,7 @@ double compute_dlnf0_dlnq(double q, double h) {
 
     /* Only Psi_0 through Psi_3 will have non-zero values at early times */
     /* Allocate and initialize all Psi's at 0. */
-    *Psi = calloc(l_max + 1, sizeof(double));
+    // *Psi = calloc(l_max + 1, sizeof(double));
 
     /* We assume adiabatic initial conditions. First, we need to calculate
      * some auxilliary quantities. */
@@ -66,12 +66,12 @@ double compute_dlnf0_dlnq(double q, double h) {
 
     /* Find a good row */
     int therow = 0;
-    for (int i=0; i<bg->nrow; i++) {
-        if (bg->functions[1][i] > tau) {
-            therow = i;
-            break;
-        }
-    }
+    // for (int i=0; i<bg->nrow; i++) {
+    //     if (bg->functions[1][i] > tau) {
+    //         therow = i;
+    //         break;
+    //     }
+    // }
 
     /* Hubble constant today and at tau */
     double H0 = bg->functions[bti->id_H][bg->nrow - 1];

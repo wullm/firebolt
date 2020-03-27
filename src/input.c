@@ -29,6 +29,7 @@ int readParams(struct params *pars, const char *fname) {
      /* Read strings */
      int len = DEFAULT_STRING_LENGTH;
      pars->OutputDirectory = malloc(len);
+     pars->OutputFilename = malloc(len);
      pars->Name = malloc(len);
      pars->BackgroundFile = malloc(len);
      pars->BackgroundFormat = malloc(len);
@@ -38,6 +39,7 @@ int readParams(struct params *pars, const char *fname) {
      ini_gets("Background", "File", "", pars->BackgroundFile, len, fname);
      ini_gets("Background", "Format", "Plain", pars->BackgroundFormat, len, fname);
      ini_gets("PerturbData", "File", "", pars->PerturbFile, len, fname);
+     ini_gets("Output", "Filename", "perturb_out.hdf5", pars->OutputFilename, len, fname);
 
      pars->MaxMultipole = ini_getl("Simulation", "MaxMultipole", 50, fname);
      pars->MaxMomentum = ini_getd("Simulation", "MaxMomentum", 15, fname);

@@ -17,20 +17,14 @@
  *
  ******************************************************************************/
 
-#ifndef DEXM_H
-#define DEXM_H
+#ifndef OUTPUT_H
+#define OUTPUT_H
 
-#include "input.h"
-#include "output.h"
-#include "background.h"
-#include "background_interp.h"
+#include <hdf5.h>
+
 #include "perturb_data.h"
-#include "perturb_interp.h"
-#include "ic.h"
-#include "evolve.h"
 
-#define TXT_RED "\033[31;1m"
-#define TXT_GREEN "\033[32;1m"
-#define TXT_RESET "\033[0m"
+int write_perturb(struct perturb_data *data, struct params *pars,
+                  struct units *us, char *fname);
 
 #endif

@@ -15,13 +15,14 @@ HDF5_LIBRARIES += -L/usr/lib/x86_64-linux-gnu/hdf5/serial -I/usr/include/hdf5/se
 #Putting it together
 INCLUDES = $(HDF5_INCLUDES) $(GSL_INCLUDES)
 LIBRARIES = $(INI_PARSER) $(STD_LIBRARIES) $(HDF5_LIBRARIES) $(GSL_LIBRARIES)
-CFLAGS = -Wall -Ofast -march=native
+CFLAGS = -Wall -Ofast -march=native -fopenmp
 
 OBJECTS = lib/*.o
 
 all:
 	make minIni
 	$(GCC) src/input.c -c -o lib/input.o $(INCLUDES) $(CFLAGS)
+	$(GCC) src/output.c -c -o lib/output.o $(INCLUDES) $(CFLAGS)
 	$(GCC) src/background.c -c -o lib/background.o $(INCLUDES) $(CFLAGS)
 	$(GCC) src/background_interp.c -c -o lib/background_interp.o $(INCLUDES) $(CFLAGS)
 	$(GCC) src/perturb_data.c -c -o lib/perturb_data.o $(INCLUDES) $(CFLAGS)

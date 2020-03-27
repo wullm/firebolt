@@ -47,6 +47,7 @@ struct params {
 
     /* Output parameters */
     char *OutputDirectory;
+    char *OutputFilename;
 };
 
 struct units {
