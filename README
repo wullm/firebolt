@@ -1,1 +1,4 @@
-Distributed memory Boltzmann solver.
+Dedicated Boltzmann solver for massive neutrino cosmologies.
+
+Post-processes perturbation vectors (e.g. from classex) to achieve
+high precision transfer functions for neutrino variables.
