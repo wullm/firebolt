@@ -25,10 +25,6 @@
 
 int evolve_gsl(double **Psi, const struct perturb_data *ptdat, const struct background *bg,
                double q, double k, int l_max, double tau_ini, double tau_final, double M,
-               double dlnf0_dlnq);
-
-int evolve(double **Psi, const struct perturb_data *ptdat, const struct background *bg,
-           double q, double k, int l_max, double tau_ini, double tau_final, double M,
-           int steps, double dlnf0_dlnq);
+               double dlnf0_dlnq, double tolerance);
 
 #endif

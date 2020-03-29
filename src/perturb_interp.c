@@ -31,6 +31,8 @@ gsl_interp_accel *k_acc;
 gsl_interp_accel *tau_acc;
 gsl_spline2d *spline1;
 gsl_spline2d *spline2;
+// gsl_spline2d *dydt_spline1;
+// gsl_spline2d *dydt_spline2;
 
 int rend_interp_init(const struct perturb_data *pt) {
     /* We will use bilinear interpolation in (tau, k) space */
@@ -38,14 +40,20 @@ int rend_interp_init(const struct perturb_data *pt) {
 
     int chunk_size = pt->k_size * pt->tau_size;
 
-    /* Allocate memory for the spline */
+    /* Allocate memory for the splines */
     spline1 = gsl_spline2d_alloc(interp_type, pt->k_size, pt->tau_size);
     spline2 = gsl_spline2d_alloc(interp_type, pt->k_size, pt->tau_size);
+    // dydt_spline1 = gsl_spline2d_alloc(interp_type, pt->k_size, pt->tau_size);
+    // dydt_spline2 = gsl_spline2d_alloc(interp_type, pt->k_size, pt->tau_size);
     /* Note: this only copies the first transfer function from pt->delta */
     gsl_spline2d_init(spline1, pt->k, pt->log_tau, pt->delta, pt->k_size,
                     pt->tau_size);
     gsl_spline2d_init(spline2, pt->k, pt->log_tau, pt->delta + chunk_size, pt->k_size,
                     pt->tau_size);
+    // gsl_spline2d_init(dydt_spline1, pt->k, pt->log_tau, pt->dydt, pt->k_size,
+    //                 pt->tau_size);
+    // gsl_spline2d_init(dydt_spline2, pt->k, pt->log_tau, pt->dydt + chunk_size, pt->k_size,
+    //                 pt->tau_size);
 
     /* Allocate memory for the accelerator objects */
     k_acc = gsl_interp_accel_alloc();
@@ -79,6 +87,8 @@ int rend_interp_free(const struct perturb_data *pt) {
     /* Done with the GSL interpolation */
     gsl_spline2d_free(spline1);
     gsl_spline2d_free(spline2);
+    // gsl_spline2d_free(dydt_spline1);
+    // gsl_spline2d_free(dydt_spline2);
     gsl_interp_accel_free(k_acc);
     gsl_interp_accel_free(tau_acc);
 
@@ -94,3 +104,15 @@ double rend_interp(double k, double log_tau, int spline) {
         return 1;
     }
 }
+
+/*
+double rend_dydt_interp(double k, double log_tau, int spline) {
+    if (spline == 0) {
+        return gsl_spline2d_eval(dydt_spline1, k, log_tau, k_acc, tau_acc);
+    } else if (spline == 1) {
+        return gsl_spline2d_eval(dydt_spline2, k, log_tau, k_acc, tau_acc);
+    } else {
+        return 1;
+    }
+}
+*/

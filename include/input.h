@@ -44,6 +44,11 @@ struct params {
     int NumberMomentumBins;
     double MaxMomentum;
     double InitialTime;
+    double Tolerance;
+
+    /* Single run parameters */
+    double kSingle;
+    double tauFinalSingle;
 
     /* Output parameters */
     char *OutputDirectory;
@@ -71,6 +76,7 @@ struct cosmology {
     double h;
     double T_nu0;
     double M_nu;
+    double Degeneracy;
 };
 
 int readParams(struct params *parser, const char *fname);

@@ -27,12 +27,14 @@ struct perturb_data {
   int tau_size;
   int n_functions;
   double *delta;
+  double *dydt; //time derivatives of delta
   double *k;
   double *log_tau;
   char **titles;
 };
 
 int readPerturb(struct params *pars, struct units *us, struct perturb_data *pt);
+int computeDerivs(struct perturb_data *pt);
 int cleanPerturb(struct perturb_data *pt);
 
 

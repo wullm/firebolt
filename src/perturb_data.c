@@ -106,6 +106,7 @@ int readPerturb(struct params *pars, struct units *us, struct perturb_data *pt) 
     pt->k = calloc(pt->k_size, sizeof(double));
     pt->log_tau = calloc(pt->tau_size, sizeof(double));
     pt->delta = malloc(pt->n_functions * pt->k_size * pt->tau_size * sizeof(double));
+    // pt->dydt = malloc(pt->n_functions * pt->k_size * pt->tau_size * sizeof(double));
 
     /* Dataspace */
     hid_t h_data;
@@ -188,10 +189,35 @@ int readPerturb(struct params *pars, struct units *us, struct perturb_data *pt) 
     return 0;
 }
 
+/* Compute conformal time derivatives of all transfer functions */
+// int computeDerivs(struct perturb_data *pt) {
+//     for (int id_func = 0; id_func < pt->n_functions; id_func++) {
+//         for (int id_k = 0; id_k < pt->k_size; id_k++) {
+//
+//             /* Handle boundaries */
+//             int index_0 = pt->tau_size * pt->k_size * id_func + pt->k_size * 0 + id_k;
+//             pt->dydt[index_0] = 0.f;
+//             pt->dydt[index_0 + (pt->tau_size - 1) * pt->k_size] = 0.f;
+//
+//             for (int id_t = 1; id_t < pt->tau_size-1; id_t++) {
+//                 int index = pt->tau_size * pt->k_size * id_func + pt->k_size * id_t + id_k;
+//
+//                 double dt = exp(pt->log_tau[id_t]) - exp(pt->log_tau[id_t-1]);
+//                 double dy = pt->delta[index] - pt->delta[index - pt->k_size];
+//
+//                 pt->dydt[index] = dy/dt;
+//             }
+//         }
+//     }
+//
+//     return 0;
+// }
+
 int cleanPerturb(struct perturb_data *pt) {
     free(pt->k);
     free(pt->log_tau);
     free(pt->delta);
+    // free(pt->dydt);
     for (int i=0; i<pt->n_functions; i++) {
         free(pt->titles[i]);
     }

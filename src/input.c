@@ -45,6 +45,11 @@ int readParams(struct params *pars, const char *fname) {
      pars->MaxMomentum = ini_getd("Simulation", "MaxMomentum", 15, fname);
      pars->NumberMomentumBins = ini_getl("Simulation", "NumberMomentumBins", 28, fname);
      pars->InitialTime = ini_getd("Simulation", "InitialTime", 0.05, fname);
+     pars->Tolerance = ini_getd("Simulation", "Tolerance", 1e-10, fname);
+
+     /* Single run parameters */
+     pars->kSingle = ini_getd("Single", "k", 0.01, fname);
+     pars->tauFinalSingle = ini_getd("Single", "tauFinal", 1000, fname);
 
      return 0;
 }
@@ -81,6 +86,7 @@ int readCosmology(struct cosmology *cosmo, const char *fname) {
      cosmo->h = ini_getd("Cosmology", "h", 0.70, fname);
      cosmo->T_nu0 = ini_getd("Cosmology", "T_nu0", 1.951757805, fname);
      cosmo->M_nu = ini_getd("Cosmology", "M_nu", 0.02, fname);
+     cosmo->Degeneracy = ini_getd("Cosmology", "Degeneracy", 1, fname);
 
      return 0;
 }

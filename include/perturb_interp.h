@@ -26,5 +26,6 @@ int rend_interp_init(const struct perturb_data *pt);
 int rend_interp_switch_source(const struct perturb_data *pt, int index_src, int spline);
 int rend_interp_free(const struct perturb_data *pt);
 double rend_interp(double k, double tau, int spline);
+// double rend_dydt_interp(double k, double tau, int spline);
 
 #endif

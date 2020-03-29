@@ -30,6 +30,7 @@ all:
 	$(GCC) src/ic.c -c -o lib/ic.o $(INCLUDES) $(CFLAGS)
 	$(GCC) src/evolve.c -c -o lib/evolve.o $(INCLUDES) $(CFLAGS)
 	$(GCC) src/firebolt.c -o firebolt $(INCLUDES) $(OBJECTS) $(LIBRARIES) $(CFLAGS)
+	$(GCC) src/firebolt_single.c -o firebolt_single $(INCLUDES) $(OBJECTS) $(LIBRARIES) $(CFLAGS)
 
 minIni:
 	cd parser && make
