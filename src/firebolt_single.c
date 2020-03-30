@@ -109,20 +109,20 @@ int main(int argc, char *argv[]) {
         double log_tau = log(tau_ini);
 
         /* Redshift */
-        double z = bg_z_at_log_tau(log_tau);
-        double a = 1./(1+z);
+        // double z = bg_z_at_log_tau(log_tau);
+        // double a = 1./(1+z);
 
         /* Obtain the background density and pressure */
-        bg_interp_switch_func(&bg, bti.id_rho_ncdm[0]);
-        double rho_nu = bg_func_at_log_tau(log_tau);
-        bg_interp_switch_func(&bg, bti.id_p_ncdm[0]);
-        double p_nu = bg_func_at_log_tau(log_tau);
-        double w_nu = p_nu/rho_nu; //equation of state
+        // bg_interp_switch_func(&bg, bti.id_rho_ncdm[0]);
+        // double rho_nu = bg_func_at_log_tau(log_tau);
+        // bg_interp_switch_func(&bg, bti.id_p_ncdm[0]);
+        // double p_nu = bg_func_at_log_tau(log_tau);
+        // double w_nu = p_nu/rho_nu; //equation of state
 
-        /* Determine a'/a = H * a */
-        bg_interp_switch_func(&bg, bti.id_H);
-        double H = bg_func_at_log_tau(log_tau);
-        double H_conf = H*a; // = a'/a
+        // /* Determine a'/a = H * a */
+        // bg_interp_switch_func(&bg, bti.id_H);
+        // double H = bg_func_at_log_tau(log_tau);
+        // double H_conf = H*a; // = a'/a
 
         // /* Transformations to N-body gauge */
         // rend_interp_switch_source(&ptdat, 0, 0); // h'
@@ -250,9 +250,9 @@ int main(int argc, char *argv[]) {
     printf("\n");
 
     /* Determine a'/a = H * a */
-    bg_interp_switch_func(&bg, bti.id_H);
-    double H = bg_func_at_log_tau(log_tau_fin);
-    double H_conf = H*a; // = a'/a
+    // bg_interp_switch_func(&bg, bti.id_H);
+    // double H = bg_func_at_log_tau(log_tau_fin);
+    // double H_conf = H*a; // = a'/a
 
     rho_delta_nu *= factor;
     rho_plus_p_theta_nu *= k*factor;

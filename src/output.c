@@ -17,6 +17,7 @@
  *
  ******************************************************************************/
 
+#include <string.h>
 #include "../include/output.h"
 
 int write_perturb(struct perturb_data *data, struct params *pars,

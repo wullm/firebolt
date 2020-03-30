@@ -125,7 +125,7 @@ int evolve_gsl(double **Psi, const struct perturb_data *ptdat, const struct back
     double err_abs = tolerance;
     double err_rel = tolerance;
 
-    gsl_odeiv2_step_type *type = gsl_odeiv2_step_rkck;
+    const gsl_odeiv2_step_type *type = gsl_odeiv2_step_rkck;
     gsl_odeiv2_step *s = gsl_odeiv2_step_alloc(type, l_max+1);
     gsl_odeiv2_control *c = gsl_odeiv2_control_y_new(err_abs, err_rel);
     gsl_odeiv2_evolve *e = gsl_odeiv2_evolve_alloc(l_max+1);
