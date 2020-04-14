@@ -31,6 +31,8 @@ all:
 	$(GCC) src/evolve.c -c -o lib/evolve.o $(INCLUDES) $(CFLAGS)
 	$(GCC) src/firebolt.c -o firebolt $(INCLUDES) $(OBJECTS) $(LIBRARIES) $(CFLAGS)
 	$(GCC) src/firebolt_single.c -o firebolt_single $(INCLUDES) $(OBJECTS) $(LIBRARIES) $(CFLAGS)
+	$(GCC) src/firebolt_print.c -o firebolt_print $(INCLUDES) $(OBJECTS) $(LIBRARIES) $(CFLAGS)
+	$(GCC) src/firebolt_check.c -o firebolt_check $(INCLUDES) $(OBJECTS) $(LIBRARIES) $(CFLAGS)
 
 minIni:
 	cd parser && make

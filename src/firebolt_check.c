@@ -69,12 +69,53 @@ int main(int argc, char *argv[]) {
     double tau_ini = exp(ptdat.log_tau[0]);
     double tau_fin = pars.tauFinalSingle;
     double M = cosmo.M_nu * us.ElectronVolt / (cosmo.T_nu0 * us.kBoltzmann);
+    double c = us.SpeedOfLight;
 
     /* Size of the problem */
     int l_max = pars.MaxMultipole;
     double q_max = pars.MaxMomentum;
     int q_steps = pars.NumberMomentumBins;
     double tol = pars.Tolerance;
+
+
+    double chi = 0.;
+    int steps = 1000;
+    double dtau = (tau_fin - tau_ini)/steps;
+    /* For each momentum bin */
+    for (int j=0; j<q_steps; j++) {
+        double dq = q_max/q_steps;
+        double q = (j+0.5) * dq;
+        double f0_eval = 1./(exp(q)+1) / log(2.);
+
+        for (int i=0; i<steps; i++) {
+            double tau = tau_ini + dtau * (i + 0.5);
+            double log_tau = log(tau);
+            double z = bg_z_at_log_tau(log_tau);
+            double a = 1./(1+z);
+            double v = q/sqrt(M*M*a*a + q*q/c/c);
+            chi += v*dtau*dq*f0_eval;
+        }
+    }
+
+    printf("chi = %e (M = %f)\n", chi, M);
+
+
+    printf("\n");
+    printf("[k] = [%f]\n", k);
+    printf("[tau_ini, z_ini] = [%f, %.2e]\n", tau_ini, bg_z_at_log_tau(log(tau_ini)));
+    printf("[tau_fin, z_fin] = [%f, %.2e]\n", tau_fin, bg_z_at_log_tau(log(tau_fin)));
+    printf("[l_max, q_steps, q_max, tol] = [%d, %d, %.1f, %.3e]\n", l_max, q_steps, q_max, tol);
+    printf("\n");
+
+    printf("c=%f\n", c);
+
+
+    exit(0);
+
+
+
+
+
 
     // rend_interp_switch_source(&ptdat, 4, 0);
     // rend_interp_switch_source(&ptdat, 5, 1);
@@ -89,15 +130,29 @@ int main(int argc, char *argv[]) {
     //
     // printf("So far so good\t z=%f\n", bg_z_at_log_tau(log(80.)));
 
-    printf("\n");
-    printf("[k] = [%f]\n", k);
-    printf("[tau_ini, z_ini] = [%f, %.2e]\n", tau_ini, bg_z_at_log_tau(log(tau_ini)));
-    printf("[tau_fin, z_fin] = [%f, %.2e]\n", tau_fin, bg_z_at_log_tau(log(tau_fin)));
-    printf("[l_max, q_steps, q_max, tol] = [%d, %d, %.1f, %.3e]\n", l_max, q_steps, q_max, tol);
-    printf("\n");
+
 
     double degeneracy = cosmo.Degeneracy;
     double factor_ncdm = degeneracy * 4 * M_PI * pow(cosmo.T_nu0 * us.kBoltzmann, 4) / pow(us.hPlanck/(2*M_PI), 3) / pow(us.SpeedOfLight, 7);
+
+    /* Pre-compute the final results expected from CLASS */
+    double log_tau_fin = log(tau_fin);
+    double z_fin = bg_z_at_log_tau(log_tau_fin);
+    double a_fin = 1./(1+z_fin);
+
+    rend_interp_switch_source(&ptdat, 4, 0);
+    rend_interp_switch_source(&ptdat, 5, 1);
+    double class_delta_nu = rend_interp(k, log_tau_fin, 0);
+    double class_theta_nu = rend_interp(k, log_tau_fin, 1);
+    /* Also determine the shear and l3*/
+    rend_interp_switch_source(&ptdat, 6, 0);
+    double class_shear_nu = rend_interp(k, log_tau_fin, 0);
+    rend_interp_switch_source(&ptdat, 8, 1);
+    double class_l3_nu = rend_interp(k, log_tau_fin, 1);
+    /* Also determine the sound speed cs2 */
+    rend_interp_switch_source(&ptdat, 7, 1);
+    double class_cs2_nu = rend_interp(k, log_tau_fin, 1);
+
 
     /* Find initial conditions */
     double ini_delta_nu;
@@ -186,6 +241,9 @@ int main(int argc, char *argv[]) {
     double rho_l3_nu = 0;
     double delta_p_nu = 0;
 
+    /* The neutrino multipoles */
+    double *Psi = calloc(l_max+1,sizeof(double));
+
     /* For each momentum bin */
     for (int j=0; j<q_steps; j++) {
         double dq = q_max/q_steps;
@@ -196,8 +254,6 @@ int main(int argc, char *argv[]) {
         double dlnf0_dlnq = compute_dlnf0_dlnq(q, y);
         double f0_eval = f0(q);
 
-        /* The neutrino multipoles */
-        double *Psi = calloc(l_max+1,sizeof(double));
 
         /* Generate initial conditions */
         // generate_ics(&bg, &bti, q, k, exp(ptdat.log_tau[0]), &Psi, l_max);
@@ -212,13 +268,18 @@ int main(int argc, char *argv[]) {
         Psi[2] = - 0.5 * ini_shear_nu * dlnf0_dlnq;
         Psi[3] = - 0.25 * ini_l3_nu * dlnf0_dlnq;
 
-        double log_tau_fin = log(tau_fin);
-
         double z = bg_z_at_log_tau(log_tau_fin);
         double a = 1./(1+z);
         double eps = hypot(q, a*M);
 
         evolve_gsl(&Psi, &ptdat, &bg, q, k, l_max, tau_ini, tau_fin, M, dlnf0_dlnq, tol);
+
+        /* At the final time, compare with the expected CLASS results */
+        double eps_fin = hypot(q, a_fin*M);
+        double Psi0 = - 0.25 * class_delta_nu * dlnf0_dlnq;
+        double Psi1 = - eps_fin / (3*q*k) * class_theta_nu * dlnf0_dlnq;
+        double Psi2 = - 0.5 * class_shear_nu * dlnf0_dlnq;
+        double Psi3 = - 0.25 * class_l3_nu * dlnf0_dlnq;
 
         /* Do the momentum integrals */
         rho_delta_nu += q*q*eps*Psi[0]*f0_eval*dq;
@@ -227,15 +288,14 @@ int main(int argc, char *argv[]) {
         rho_l3_nu += q*q*eps*Psi[3]*f0_eval*dq;
         delta_p_nu += q*q*q*q/eps*Psi[0]*f0_eval*dq;
 
-        printf("%f %e %e %e %e\n", q, q*q*eps*Psi[0]*f0_eval*dq, q*q*q*Psi[1]*f0_eval*dq, q*q*q*q/eps*Psi[2]*f0_eval*dq, q*q*eps*Psi[3]*f0_eval*dq);
-
-        free(Psi);
+        // printf("%f %e %e %e %e\n", q, Psi0, Psi1, Psi2, Psi3);
+        printf("%f %e %e %e %e\n", q, Psi[0], Psi[1], Psi[2], Psi[3]);
     }
 
     printf("Done with integrating. Processing the moments.\n");
 
+
     /* Post-process the integrated moments */
-    double log_tau_fin = log(tau_fin);
     double z = bg_z_at_log_tau(log_tau_fin);
     double a = 1./(1+z);
     double factor = factor_ncdm / (a*a*a*a);
@@ -290,28 +350,6 @@ int main(int argc, char *argv[]) {
     // delta_nu += 3*(1+w_nu)*H_conf*theta_tot/k/k;
     // theta_nu += theta_shift;
 
-    /* Compare with CLASS results */
-    rend_interp_switch_source(&ptdat, 4, 0);
-    rend_interp_switch_source(&ptdat, 5, 1);
-
-    double class_delta_nu = rend_interp(k, log_tau_fin, 0);
-    double class_theta_nu = rend_interp(k, log_tau_fin, 1);
-
-    /* Little h correction for theta's */
-    // class_theta_nu *= cosmo.h * cosmo.h;
-
-    // class_delta_nu -= 3*(1+w_nu)*H_conf*theta_tot/k/k;
-    // class_theta_nu -= theta_shift;
-
-    /* Also determine the shear and l3*/
-    rend_interp_switch_source(&ptdat, 6, 0);
-    double class_shear_nu = rend_interp(k, log_tau_fin, 0);
-    rend_interp_switch_source(&ptdat, 8, 1);
-    double class_l3_nu = rend_interp(k, log_tau_fin, 1);
-
-    /* Also determine the sound speed cs2 */
-    rend_interp_switch_source(&ptdat, 7, 1);
-    double class_cs2_nu = rend_interp(k, log_tau_fin, 1);
 
     printf("rel. error [delta, theta, shear, l3, cs2] = [%f, %f, %f, %f, %f]\n", delta_nu/class_delta_nu, theta_nu/class_theta_nu, shear_nu/class_shear_nu, l3_nu/class_l3_nu, cs2_nu/class_cs2_nu);
     printf("values [delta, theta, shear, l3, cs2] = [%e, %e, %e, %e, %e]\n", delta_nu, theta_nu, shear_nu, l3_nu, cs2_nu);
@@ -321,6 +359,40 @@ int main(int argc, char *argv[]) {
     rend_interp_switch_source(&ptdat, 6, 0);
     printf("\n\n %e %e\n", rend_interp(k, ptdat.log_tau[0], 1), rend_interp(k, log_tau_fin, 1));
     printf("%e %e\n", ini_shear_nu, class_shear_nu);
+
+
+    // for (int j=0; j<q_steps; j++) {
+    //     double dq = q_max/q_steps;
+    //     double q = (j+0.5) * dq;
+    //
+    //     /* Derivative of the distribution function (5-point stencil) */
+    //     double y = 0.0001;
+    //     double dlnf0_dlnq = compute_dlnf0_dlnq(q, y);
+    //     double f0_eval = f0(q);
+    //
+    //
+    //     /* Generate initial conditions */
+    //     // generate_ics(&bg, &bti, q, k, exp(ptdat.log_tau[0]), &Psi, l_max);
+    //
+    //     /* At the initial time */
+    //     double a = 1./(1+z);
+    //     double eps = hypot(q, a*M);
+    //
+    //     double Psi0 = - 0.25 * delta_nu * dlnf0_dlnq;
+    //     double Psi1 = - eps / (3*q*k) * theta_nu * dlnf0_dlnq;
+    //     double Psi2 = - 0.5 * shear_nu * dlnf0_dlnq;
+    //     double Psi3 = - 0.25 * l3_nu * dlnf0_dlnq;
+    //
+    //     // printf("000 %f %e %e %e %e\n", q, Psi0, Psi1, Psi2, Psi3);
+    //     printf("000 %f %e %e %e %e\n", q, Psi[0], Psi[1], Psi[2], Psi[3]);
+    // }
+
+
+
+
+
+
+    free(Psi);
 
     // printf("\n\n");
     // for (int i=0; i<ptdat.tau_size; i++) {

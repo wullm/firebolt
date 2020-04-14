@@ -21,6 +21,7 @@
 #include <string.h>
 #include <ctype.h> //isdigit
 #include <math.h>
+#include <assert.h>
 #include "../include/background.h"
 
 static inline char is_comment_line(char *line) {
@@ -152,7 +153,7 @@ int readBackground(const struct params *pars, const struct units *us,
     /* Move to the last leading comment line */
     rewind(f);
     for (int i=0; i<leading_comment_lines; i++) {
-        fgets(line, sizeof(line), f);
+        assert(fgets(line, sizeof(line), f) == line); //read line, do nothing
     }
 
     /* Allocate memory for pointers to the column title strings */

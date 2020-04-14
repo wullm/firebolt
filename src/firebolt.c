@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <sys/time.h>
 
 #include "../include/firebolt.h"
 
@@ -35,6 +36,10 @@ int main(int argc, char *argv[]) {
     /* Read options */
     const char *fname = argv[1];
     printf("The parameter file is %s\n", fname);
+
+    /* Timer */
+    struct timeval stop, start;
+    gettimeofday(&start, NULL);
 
     /* Firebolt structures */
     struct params pars;
@@ -159,9 +164,11 @@ int main(int argc, char *argv[]) {
 
 
     #pragma omp parallel for
-    for (int index_k=0; index_k<ptdat.k_size; index_k++) {
+    for (int index_k=0; index_k<ptdat.k_size; index_k+=5) {
         /* Wavenumber */
         double k = ptdat.k[index_k];
+
+        if (k < 0.02) continue; //skip the easy ones
 
         /* The variables that are integrated (just for this k) */
         double *rho_delta_nu = calloc(ptdat.tau_size, sizeof(double));
@@ -500,4 +507,9 @@ int main(int argc, char *argv[]) {
     cleanBackgroundTitles(&bti);
     cleanBackground(&bg);
     cleanParams(&pars);
+
+    /* Timer */
+    gettimeofday(&stop, NULL);
+    long unsigned microsec = (stop.tv_sec - start.tv_sec) * 1000000 + stop.tv_usec - start.tv_usec;
+    printf("Time elapsed: %.3f ms\n", microsec/1000.);
 }
