@@ -17,26 +17,23 @@
  *
  ******************************************************************************/
 
-#ifndef DEXM_H
-#define DEXM_H
+#ifndef MULTIPOLES_H
+#define MULTIPOLES_H
 
 #include "input.h"
-#include "output.h"
-#include "background.h"
-#include "background_interp.h"
-#include "perturb_data.h"
-#include "perturb_interp.h"
-#include "ic.h"
-#include "evolve.h"
 
-#include "fft.h"
-#include "multipoles.h"
-#include "multipole_interp.h"
-#include "grids.h"
-#include "evaluate.h"
+struct multipoles {
+  int k_size;
+  int q_size;
+  int l_size;
+  double *Psi;
+  double *k;
+  double *q;
+};
 
-#define TXT_RED "\033[31;1m"
-#define TXT_GREEN "\033[32;1m"
-#define TXT_RESET "\033[0m"
+int initMultipoles(struct multipoles *m, int k_size, int q_size, int l_size,
+                   double q_min, double q_max, double k_min, double k_max);
+int cleanMultipoles(struct multipoles *m);
+
 
 #endif

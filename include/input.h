@@ -53,6 +53,10 @@ struct params {
     /* Output parameters */
     char *OutputDirectory;
     char *OutputFilename;
+
+    /* Parameters for grid rendering */
+    int GridSize;
+    double BoxLen;
 };
 
 struct units {
@@ -84,5 +88,8 @@ int readUnits(struct units *us, const char *fname);
 int readCosmology(struct cosmology *cosmo, const char *fname);
 
 int cleanParams(struct params *parser);
+
+
+int readGRF_H5(double **box, int *N, double *box_len, const char *fname);
 
 #endif

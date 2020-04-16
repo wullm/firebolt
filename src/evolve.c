@@ -29,22 +29,35 @@
 #include "../include/perturb_interp.h"
 #include "../include/evolve.h"
 
+struct ode_pars {
+    /* Array of parameters of the diferential equation */
+    double *params;
+    /* Reference to a function that gives redshift z as function of log(tau) */
+    double (*zfunc_of_log_tau)(double);
+};
 
-int func(double tau, const double Psi[], double dPsi[], void *params) {
-    double *pars = (double*)params;
-    double k = pars[0];
-    double q = pars[1];
-    double M = pars[2];
-    int l_max = (int) pars[3];
-    double dlnf0_dlnq = pars[4];
+struct ode_pars op;
 
+/* Right-hand side of the differential equation */
+int func(double tau, const double Psi[], double dPsi[], void *ode_pars) {
+    /* Unpack the parameters of the differential equation */
+    struct ode_pars *ops = (struct ode_pars*) ode_pars;
+    double *params = ops->params;
+    double k = params[0]; //wavenumber
+    double q = params[1]; //dimensionless momentum
+    double M = params[2]; //mass
+    int l_max = (int) params[3]; //maximum multipole
+    double dlnf0_dlnq = params[4]; //logarithmic derivative of distr. func.
+    double (*zfunc_of_log_tau)(double) = ops->zfunc_of_log_tau;
+
+    /* Compute the necessary quantities */
     double logt = log(tau);
-    double z = bg_z_at_log_tau(logt);
-    double a = 1./(1+z);
-    double eps = hypot(q, a*M);
-
+    double z = zfunc_of_log_tau(logt); //redshift
+    double a = 1./(1+z); //scale factor
+    double eps = hypot(q, a*M); //dimensionless energy
     double qke = q*k/eps;
 
+    /* Interpolate the source functions at (k, log tau) */
     double h_prime = rend_interp(k, logt, 0);
     double eta_prime = rend_interp(k, logt, 1);
 
@@ -112,13 +125,21 @@ int evolve_gsl(double **Psi, const struct perturb_data *ptdat, const struct back
                double dlnf0_dlnq, double tolerance) {
 
     /* Coldsonte */
-    double params[5];
-    params[0] = k;
-    params[1] = q;
-    params[2] = M;
-    params[3] = l_max;
-    params[4] = dlnf0_dlnq;
-    gsl_odeiv2_system sys = {func, NULL, l_max+1, params};
+    // double params[5];
+    // params[0] = k;
+    // params[1] = q;
+    // params[2] = M;
+    // params[3] = l_max;
+    // params[4] = dlnf0_dlnq;
+    op.params = malloc(5 * sizeof(double));
+    op.params[0] = k;
+    op.params[1] = q;
+    op.params[2] = M;
+    op.params[3] = l_max;
+    op.params[4] = dlnf0_dlnq;
+    op.zfunc_of_log_tau = bg_z_at_log_tau;
+
+    gsl_odeiv2_system sys = {func, NULL, l_max+1, &op};
     double t = tau_ini, t1 = tau_final;
 
     double h = 1e-10;
@@ -144,6 +165,8 @@ int evolve_gsl(double **Psi, const struct perturb_data *ptdat, const struct back
     gsl_odeiv2_control_free(c);
     gsl_odeiv2_step_free(s);
     gsl_odeiv2_driver_free(d);
+
+    free(op.params);
 
     return status;
 }

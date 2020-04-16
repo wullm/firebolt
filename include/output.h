@@ -27,4 +27,6 @@
 int write_perturb(struct perturb_data *data, struct params *pars,
                   struct units *us, char *fname);
 
+int writeGRF_H5(const double *box, int N, double box_len, const char *fname);
+
 #endif

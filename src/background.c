@@ -139,7 +139,7 @@ int readBackground(const struct params *pars, const struct units *us,
 
     /* Open the data file */
     FILE *f = fopen(fname, "r");
-    char line[2000];
+    char line[2000] = "";
 
     /* Determine the size of the table */
     int nrow;
@@ -233,9 +233,14 @@ int readBackground(const struct params *pars, const struct units *us,
 
 
 int cleanBackground(struct background *bg) {
+    for (int i=0; i<bg->ncol; i++) {
+        free(bg->titles[i]);
+        free(bg->functions[i]);
+    }
     free(bg->titles);
     free(bg->functions);
     free(bg->z);
+    free(bg->log_tau);
 
     return 0;
 }

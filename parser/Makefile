@@ -1,4 +1,4 @@
 GCC = gcc
 
 all:
-	$(GCC) minIni.c -c
+	$(GCC) minIni.c -c -fPIC

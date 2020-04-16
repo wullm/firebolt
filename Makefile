@@ -4,6 +4,7 @@ GCC = gcc
 #Libraries
 INI_PARSER = parser/minIni.o
 STD_LIBRARIES = -lm
+FFTW_LIBRARIES = -lfftw3
 HDF5_LIBRARIES = -lhdf5
 GSL_LIBRARIES = -lgsl -lgslcblas
 
@@ -14,8 +15,8 @@ HDF5_LIBRARIES += -L/usr/lib/x86_64-linux-gnu/hdf5/serial -I/usr/include/hdf5/se
 
 #Putting it together
 INCLUDES = $(HDF5_INCLUDES) $(GSL_INCLUDES)
-LIBRARIES = $(INI_PARSER) $(STD_LIBRARIES) $(HDF5_LIBRARIES) $(GSL_LIBRARIES)
-CFLAGS = -Wall -Ofast -march=native -fopenmp
+LIBRARIES = $(INI_PARSER) $(STD_LIBRARIES) $(FFTW_LIBRARIES) $(HDF5_LIBRARIES) $(GSL_LIBRARIES)
+CFLAGS = -Wall -Ofast -march=native -fopenmp -fPIC -ggdb3
 
 OBJECTS = lib/*.o
 
@@ -29,10 +30,22 @@ all:
 	$(GCC) src/perturb_interp.c -c -o lib/perturb_interp.o $(INCLUDES) $(CFLAGS)
 	$(GCC) src/ic.c -c -o lib/ic.o $(INCLUDES) $(CFLAGS)
 	$(GCC) src/evolve.c -c -o lib/evolve.o $(INCLUDES) $(CFLAGS)
+
+	$(GCC) src/fft.c -c -o lib/fft.o $(INCLUDES) $(CFLAGS)
+	$(GCC) src/multipoles.c -c -o lib/multipoles.o $(INCLUDES) $(CFLAGS)
+	$(GCC) src/multipole_interp.c -c -o lib/multipole_interp.o $(INCLUDES) $(CFLAGS)
+	$(GCC) src/grids.c -c -o lib/grids.o $(INCLUDES) $(CFLAGS)
+	$(GCC) src/evaluate.c -c -o lib/evaluate.o $(INCLUDES) $(CFLAGS)
+
 	$(GCC) src/firebolt.c -o firebolt $(INCLUDES) $(OBJECTS) $(LIBRARIES) $(CFLAGS)
 	$(GCC) src/firebolt_single.c -o firebolt_single $(INCLUDES) $(OBJECTS) $(LIBRARIES) $(CFLAGS)
 	$(GCC) src/firebolt_print.c -o firebolt_print $(INCLUDES) $(OBJECTS) $(LIBRARIES) $(CFLAGS)
 	$(GCC) src/firebolt_check.c -o firebolt_check $(INCLUDES) $(OBJECTS) $(LIBRARIES) $(CFLAGS)
+	$(GCC) src/firebolt_render.c -o firebolt_render $(INCLUDES) $(OBJECTS) $(LIBRARIES) $(CFLAGS)
+
+	$(GCC) -shared -o libfirebolt.so $(INCLUDES) $(OBJECTS) $(LIBRARIES) $(CFLAGS)
+
+	$(GCC) src/testlib.c -o testlib -L/home/qvgd89/firebolt -lfirebolt -lfftw3 $(INCLUDES) $(CFLAGS) -lm -Wl,-rpath=/home/qvgd89/firebolt
 
 minIni:
 	cd parser && make
