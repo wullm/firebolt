@@ -32,7 +32,7 @@ gsl_interp_accel *pt_tau_acc;
 gsl_spline2d *pt_spline1;
 gsl_spline2d *pt_spline2;
 
-int rend_interp_init(const struct perturb_data *pt) {
+int initPerturbInterp(const struct perturb_data *pt) {
     /* We will use bilinear interpolation in (tau, k) space */
     pt_interp_type = gsl_interp2d_bilinear;
 
@@ -55,7 +55,7 @@ int rend_interp_init(const struct perturb_data *pt) {
 }
 
 /* index_src is the index of the transfer function type */
-int rend_interp_switch_source(const struct perturb_data *pt, int index_src, int spline) {
+int switchPerturbInterp(const struct perturb_data *pt, int index_src, int spline) {
     /* The array pt->delta contains a sequence of all transfer functions T(k,tau),
     * each of size pt->k_size * pt->tau_size doubles */
     int chunk_size = pt->k_size * pt->tau_size;
@@ -75,7 +75,7 @@ int rend_interp_switch_source(const struct perturb_data *pt, int index_src, int 
     return 0;
 }
 
-int rend_interp_free(const struct perturb_data *pt) {
+int cleanPerturbInterp(const struct perturb_data *pt) {
     /* Done with the GSL interpolation */
     gsl_spline2d_free(pt_spline1);
     gsl_spline2d_free(pt_spline2);
@@ -85,7 +85,7 @@ int rend_interp_free(const struct perturb_data *pt) {
     return 0;
 }
 
-double rend_interp(double k, double log_tau, int spline) {
+double perturbInterp(double k, double log_tau, int spline) {
     if (spline == 0) {
         return gsl_spline2d_eval(pt_spline1, k, log_tau, pt_k_acc, pt_tau_acc);
     } else if (spline == 1) {

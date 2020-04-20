@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
     parseBackgroundTitles(&bg, &bti);
 
     /* Initialize interpolation splines */
-    rend_interp_init(&ptdat);
+    initPerturbInterp(&ptdat);
     bg_interp_init(&bg);
 
     /* The system to solve */
@@ -75,13 +75,13 @@ int main(int argc, char *argv[]) {
     int q_steps = pars.NumberMomentumBins;
     double tol = pars.Tolerance;
 
-    // rend_interp_switch_source(&ptdat, 4, 0);
-    // rend_interp_switch_source(&ptdat, 5, 1);
+    // switchPerturbInterp(&ptdat, 4, 0);
+    // switchPerturbInterp(&ptdat, 5, 1);
     //
     // for (int i=0; i<100; i++) {
     //     double y = exp(log(1e-5) + (log(10) - log(1e-5)) * (i+1) * 0.01);
-    //     double h_prime = rend_interp(y, log(80.), 0);
-    //     double eta_prime = rend_interp(y, log(80.), 1);
+    //     double h_prime = perturbInterp(y, log(80.), 0);
+    //     double eta_prime = perturbInterp(y, log(80.), 1);
     //     // printf("%f %e %e\n", y, h_prime/6, h_prime/15 + 2*eta_prime/5);
     //     printf("%f %e %e\n", y, h_prime, eta_prime);
     // }
@@ -135,17 +135,17 @@ int main(int argc, char *argv[]) {
         double log_tau = ptdat.log_tau[0];
 
         /* Compare with CLASS results */
-        rend_interp_switch_source(&ptdat, 4, 0);
-        rend_interp_switch_source(&ptdat, 5, 1);
+        switchPerturbInterp(&ptdat, 4, 0);
+        switchPerturbInterp(&ptdat, 5, 1);
 
-        double class_delta_nu = rend_interp(k, log_tau, 0);
-        double class_theta_nu = rend_interp(k, log_tau, 1);
+        double class_delta_nu = perturbInterp(k, log_tau, 0);
+        double class_theta_nu = perturbInterp(k, log_tau, 1);
 
         /* Also determine the shear and l3 */
-        rend_interp_switch_source(&ptdat, 6, 0); //shear
-        double class_shear_nu = rend_interp(k, log_tau, 0);
-        rend_interp_switch_source(&ptdat, 8, 1); //l3
-        double class_l3_nu = rend_interp(k, log_tau, 1);
+        switchPerturbInterp(&ptdat, 6, 0); //shear
+        double class_shear_nu = perturbInterp(k, log_tau, 0);
+        switchPerturbInterp(&ptdat, 8, 1); //l3
+        double class_l3_nu = perturbInterp(k, log_tau, 1);
 
         ini_delta_nu[index_k] = class_delta_nu;
         ini_theta_nu[index_k] = class_theta_nu;
@@ -155,8 +155,8 @@ int main(int argc, char *argv[]) {
 
 
     /* Switch back to h' and eta' */
-    rend_interp_switch_source(&ptdat, 0, 0); // h'
-    rend_interp_switch_source(&ptdat, 1, 1); // eta'
+    switchPerturbInterp(&ptdat, 0, 0); // h'
+    switchPerturbInterp(&ptdat, 1, 1); // eta'
 
     printf("Initial conditions done.\n");
 
@@ -303,21 +303,21 @@ int main(int argc, char *argv[]) {
             double cs2_nu = delta_p_nu/rho_delta_nu / (-k*k);
 
             /* Compare with CLASS results */
-            rend_interp_switch_source(&ptdat, 4, 0);
-            rend_interp_switch_source(&ptdat, 5, 1);
+            switchPerturbInterp(&ptdat, 4, 0);
+            switchPerturbInterp(&ptdat, 5, 1);
 
-            double class_delta_nu = rend_interp(k, log_tau, 0);
-            double class_theta_nu = rend_interp(k, log_tau, 1);
+            double class_delta_nu = perturbInterp(k, log_tau, 0);
+            double class_theta_nu = perturbInterp(k, log_tau, 1);
 
             /* Also determine the shear and l3 */
-            rend_interp_switch_source(&ptdat, 6, 0); //shear
-            double class_shear_nu = rend_interp(k, log_tau, 0);
-            rend_interp_switch_source(&ptdat, 8, 1); //l3
-            double class_l3_nu = rend_interp(k, log_tau, 1);
+            switchPerturbInterp(&ptdat, 6, 0); //shear
+            double class_shear_nu = perturbInterp(k, log_tau, 0);
+            switchPerturbInterp(&ptdat, 8, 1); //l3
+            double class_l3_nu = perturbInterp(k, log_tau, 1);
 
             /* Also determine the sound speed cs2 */
-            rend_interp_switch_source(&ptdat, 7, 1);
-            double class_cs2_nu = rend_interp(k, log_tau, 1);
+            switchPerturbInterp(&ptdat, 7, 1);
+            double class_cs2_nu = perturbInterp(k, log_tau, 1);
 
             printf("rel. error [delta, theta, shear, l3, cs2] = [%f, %f, %f, %f, %f]\n", delta_nu/class_delta_nu, theta_nu/class_theta_nu, shear_nu/class_shear_nu, l3_nu/class_l3_nu, cs2_nu/class_cs2_nu);
 
@@ -347,8 +347,8 @@ int main(int argc, char *argv[]) {
 
 
     // /* Switch back to metric splines */
-    // rend_interp_switch_source(&ptdat, 0, 0); // h'
-    // rend_interp_switch_source(&ptdat, 1, 1); // eta'
+    // switchPerturbInterp(&ptdat, 0, 0); // h'
+    // switchPerturbInterp(&ptdat, 1, 1); // eta'
     // /* Check the accuracy */
     // for (int index_k=0; index_k<hires_pt.k_size; index_k++) {
     //     double k = hires_pt.k[index_k];
@@ -382,8 +382,8 @@ int main(int argc, char *argv[]) {
     // double factor = factor_ncdm / (a*a*a*a);
     //
     //
-    // rend_interp_switch_source(&ptdat, 0, 0);
-    // rend_interp_switch_source(&ptdat, 1, 1);
+    // switchPerturbInterp(&ptdat, 0, 0);
+    // switchPerturbInterp(&ptdat, 1, 1);
     //
     // double rho_delta_nu = 0;
     // double rho_plus_p_theta_nu = 0;
@@ -441,18 +441,18 @@ int main(int argc, char *argv[]) {
     //
     //
     // /* Transformations to N-body gauge */
-    // rend_interp_switch_source(&ptdat, 0, 0); // h'
-    // rend_interp_switch_source(&ptdat, 1, 1); // eta'
-    // double h_prime = rend_interp(k, log(final_tau), 0);
-    // double eta_prime = rend_interp(k, log(final_tau), 1);
+    // switchPerturbInterp(&ptdat, 0, 0); // h'
+    // switchPerturbInterp(&ptdat, 1, 1); // eta'
+    // double h_prime = perturbInterp(k, log(final_tau), 0);
+    // double eta_prime = perturbInterp(k, log(final_tau), 1);
     // double alpha = (h_prime + 6*eta_prime)/(2*k*k);
     //
-    // rend_interp_switch_source(&ptdat, 2, 0); // H_T_Nb_prime
-    // rend_interp_switch_source(&ptdat, 3, 1); // t_tot
+    // switchPerturbInterp(&ptdat, 2, 0); // H_T_Nb_prime
+    // switchPerturbInterp(&ptdat, 3, 1); // t_tot
     //
-    // double H_T_Nb_prime = rend_interp(k, log(final_tau), 0);
+    // double H_T_Nb_prime = perturbInterp(k, log(final_tau), 0);
     // double theta_shift = H_T_Nb_prime + alpha*k*k;
-    // double theta_tot = rend_interp(k, log(final_tau), 1)  - theta_shift;
+    // double theta_tot = perturbInterp(k, log(final_tau), 1)  - theta_shift;
     // /* End transformation variables */
     //
     // /* Little h correction for theta's */
@@ -479,18 +479,18 @@ int main(int argc, char *argv[]) {
     // theta_nu += theta_shift;
     //
     // /* Compare with CLASS results */
-    // rend_interp_switch_source(&ptdat, 4, 0);
-    // rend_interp_switch_source(&ptdat, 5, 1);
+    // switchPerturbInterp(&ptdat, 4, 0);
+    // switchPerturbInterp(&ptdat, 5, 1);
     //
-    // double class_delta_nu = rend_interp(k, log(final_tau), 0);
-    // double class_theta_nu = rend_interp(k, log(final_tau), 1);
+    // double class_delta_nu = perturbInterp(k, log(final_tau), 0);
+    // double class_theta_nu = perturbInterp(k, log(final_tau), 1);
     //
     // /* Little h correction for theta's */
     // class_theta_nu *= cosmo.h * cosmo.h;
     //
     // /* Also determine the shear */
-    // rend_interp_switch_source(&ptdat, 6, 1);
-    // double class_shear_nu = rend_interp(k, log(final_tau), 1);
+    // switchPerturbInterp(&ptdat, 6, 1);
+    // double class_shear_nu = perturbInterp(k, log(final_tau), 1);
     //
     // printf("%f %e %e %e\n", k, delta_nu, theta_nu, shear_nu);
     // printf("%f %e %e %e\n\n", k, class_delta_nu, class_theta_nu, class_shear_nu);
@@ -499,7 +499,7 @@ int main(int argc, char *argv[]) {
 
     /* Release the interpolation splines */
     bg_interp_free(&bg);
-    rend_interp_free(&ptdat);
+    cleanPerturbInterp(&ptdat);
 
     /* Clean up the remaining structures */
     cleanPerturb(&ptdat);

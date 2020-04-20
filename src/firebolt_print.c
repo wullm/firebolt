@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
     // computeDerivs(&ptdat);
 
     /* Initialize interpolation splines */
-    rend_interp_init(&ptdat);
+    initPerturbInterp(&ptdat);
     bg_interp_init(&bg);
 
     /* The system to solve */
@@ -79,21 +79,21 @@ int main(int argc, char *argv[]) {
         double k = ptdat.k[i];
 
         /* Retrieve delta and theta results */
-        rend_interp_switch_source(&ptdat, 4, 0);
-        rend_interp_switch_source(&ptdat, 5, 1);
+        switchPerturbInterp(&ptdat, 4, 0);
+        switchPerturbInterp(&ptdat, 5, 1);
 
-        double delta_nu = rend_interp(k, log_tau_fin, 0);
-        double theta_nu = rend_interp(k, log_tau_fin, 1);
+        double delta_nu = perturbInterp(k, log_tau_fin, 0);
+        double theta_nu = perturbInterp(k, log_tau_fin, 1);
 
         /* Also determine the shear and l3*/
-        rend_interp_switch_source(&ptdat, 6, 0);
-        double shear_nu = rend_interp(k, log_tau_fin, 0);
-        rend_interp_switch_source(&ptdat, 8, 1);
-        double l3_nu = rend_interp(k, log_tau_fin, 1);
+        switchPerturbInterp(&ptdat, 6, 0);
+        double shear_nu = perturbInterp(k, log_tau_fin, 0);
+        switchPerturbInterp(&ptdat, 8, 1);
+        double l3_nu = perturbInterp(k, log_tau_fin, 1);
 
         /* Also determine the sound speed cs2 */
-        rend_interp_switch_source(&ptdat, 7, 1);
-        double cs2_nu = rend_interp(k, log_tau_fin, 1);
+        switchPerturbInterp(&ptdat, 7, 1);
+        double cs2_nu = perturbInterp(k, log_tau_fin, 1);
 
         printf("%f %e %e %e %e %e\n", k, delta_nu, theta_nu, shear_nu, l3_nu, cs2_nu);
 
@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) {
 
     /* Release the interpolation splines */
     bg_interp_free(&bg);
-    rend_interp_free(&ptdat);
+    cleanPerturbInterp(&ptdat);
 
     /* Clean up the remaining structures */
     cleanPerturb(&ptdat);

@@ -58,8 +58,8 @@ int func(double tau, const double Psi[], double dPsi[], void *ode_pars) {
     double qke = q*k/eps;
 
     /* Interpolate the source functions at (k, log tau) */
-    double h_prime = rend_interp(k, logt, 0);
-    double eta_prime = rend_interp(k, logt, 1);
+    double h_prime = perturbInterp(k, logt, 0);
+    double eta_prime = perturbInterp(k, logt, 1);
 
     /* Set the final Psi, using the truncation prescription of Ma & Bertschinger */
     double Psi_lmax_p1 = (2*l_max+1)/qke/tau * Psi[l_max] - Psi[l_max-1];

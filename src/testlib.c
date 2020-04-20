@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
     readUnits(&us, fname);
     readCosmology(&cosmo, fname);
     readPerturb(&pars, &us, &ptdat);
-    rend_interp_init(&ptdat);
+    initPerturbInterp(&ptdat);
 
     /* Read background cosmology */
     readBackground(&pars, &us, &cosmo, &bg);
@@ -153,7 +153,7 @@ int main(int argc, char *argv[]) {
 
     /* Release the interpolation splines */
     bg_interp_free(&bg);
-    rend_interp_free(&ptdat);
+    cleanPerturbInterp(&ptdat);
 
     /* Clean up the remaining structures */
     cleanGrids(&grs);
