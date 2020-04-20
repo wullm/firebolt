@@ -26,38 +26,30 @@
 #include "../include/perturb_interp.h"
 
 /* GSL interpolation objects */
-const gsl_interp2d_type *interp_type;
-gsl_interp_accel *k_acc;
-gsl_interp_accel *tau_acc;
-gsl_spline2d *spline1;
-gsl_spline2d *spline2;
-// gsl_spline2d *dydt_spline1;
-// gsl_spline2d *dydt_spline2;
+const gsl_interp2d_type *pt_interp_type;
+gsl_interp_accel *pt_k_acc;
+gsl_interp_accel *pt_tau_acc;
+gsl_spline2d *pt_spline1;
+gsl_spline2d *pt_spline2;
 
 int rend_interp_init(const struct perturb_data *pt) {
     /* We will use bilinear interpolation in (tau, k) space */
-    interp_type = gsl_interp2d_bilinear;
+    pt_interp_type = gsl_interp2d_bilinear;
 
     int chunk_size = pt->k_size * pt->tau_size;
 
     /* Allocate memory for the splines */
-    spline1 = gsl_spline2d_alloc(interp_type, pt->k_size, pt->tau_size);
-    spline2 = gsl_spline2d_alloc(interp_type, pt->k_size, pt->tau_size);
-    // dydt_spline1 = gsl_spline2d_alloc(interp_type, pt->k_size, pt->tau_size);
-    // dydt_spline2 = gsl_spline2d_alloc(interp_type, pt->k_size, pt->tau_size);
+    pt_spline1 = gsl_spline2d_alloc(pt_interp_type, pt->k_size, pt->tau_size);
+    pt_spline2 = gsl_spline2d_alloc(pt_interp_type, pt->k_size, pt->tau_size);
     /* Note: this only copies the first transfer function from pt->delta */
-    gsl_spline2d_init(spline1, pt->k, pt->log_tau, pt->delta, pt->k_size,
+    gsl_spline2d_init(pt_spline1, pt->k, pt->log_tau, pt->delta, pt->k_size,
                     pt->tau_size);
-    gsl_spline2d_init(spline2, pt->k, pt->log_tau, pt->delta + chunk_size, pt->k_size,
+    gsl_spline2d_init(pt_spline2, pt->k, pt->log_tau, pt->delta + chunk_size, pt->k_size,
                     pt->tau_size);
-    // gsl_spline2d_init(dydt_spline1, pt->k, pt->log_tau, pt->dydt, pt->k_size,
-    //                 pt->tau_size);
-    // gsl_spline2d_init(dydt_spline2, pt->k, pt->log_tau, pt->dydt + chunk_size, pt->k_size,
-    //                 pt->tau_size);
 
     /* Allocate memory for the accelerator objects */
-    k_acc = gsl_interp_accel_alloc();
-    tau_acc = gsl_interp_accel_alloc();
+    pt_k_acc = gsl_interp_accel_alloc();
+    pt_tau_acc = gsl_interp_accel_alloc();
 
   return 0;
 }
@@ -71,9 +63,9 @@ int rend_interp_switch_source(const struct perturb_data *pt, int index_src, int 
     /* Copy the desired transfer function to the spline */
     double *destination;
     if (spline == 0) {
-        destination = spline1->zarr;
+        destination = pt_spline1->zarr;
     } else if (spline == 1) {
-        destination = spline2->zarr;
+        destination = pt_spline2->zarr;
     } else {
         return 1;
     }
@@ -85,34 +77,20 @@ int rend_interp_switch_source(const struct perturb_data *pt, int index_src, int 
 
 int rend_interp_free(const struct perturb_data *pt) {
     /* Done with the GSL interpolation */
-    gsl_spline2d_free(spline1);
-    gsl_spline2d_free(spline2);
-    // gsl_spline2d_free(dydt_spline1);
-    // gsl_spline2d_free(dydt_spline2);
-    gsl_interp_accel_free(k_acc);
-    gsl_interp_accel_free(tau_acc);
+    gsl_spline2d_free(pt_spline1);
+    gsl_spline2d_free(pt_spline2);
+    gsl_interp_accel_free(pt_k_acc);
+    gsl_interp_accel_free(pt_tau_acc);
 
     return 0;
 }
 
 double rend_interp(double k, double log_tau, int spline) {
     if (spline == 0) {
-        return gsl_spline2d_eval(spline1, k, log_tau, k_acc, tau_acc);
+        return gsl_spline2d_eval(pt_spline1, k, log_tau, pt_k_acc, pt_tau_acc);
     } else if (spline == 1) {
-        return gsl_spline2d_eval(spline2, k, log_tau, k_acc, tau_acc);
+        return gsl_spline2d_eval(pt_spline2, k, log_tau, pt_k_acc, pt_tau_acc);
     } else {
         return 1;
     }
 }
-
-/*
-double rend_dydt_interp(double k, double log_tau, int spline) {
-    if (spline == 0) {
-        return gsl_spline2d_eval(dydt_spline1, k, log_tau, k_acc, tau_acc);
-    } else if (spline == 1) {
-        return gsl_spline2d_eval(dydt_spline2, k, log_tau, k_acc, tau_acc);
-    } else {
-        return 1;
-    }
-}
-*/

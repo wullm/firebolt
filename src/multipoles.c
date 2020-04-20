@@ -23,6 +23,8 @@
 #include <math.h>
 #include <assert.h>
 #include "../include/multipoles.h"
+#include "../include/evolve.h"
+#include "../include/ic.h"
 
 
 /* Simple binomial coefficient function */
@@ -77,6 +79,50 @@ int initMultipoles(struct multipoles *m, int k_size, int q_size, int l_size,
     return 0;
 }
 
+int evolveMultipoles(struct multipoles *m, const struct perturb_data *ptdat,
+                     double tau_ini, double tau_fin, double tol, double mass,
+                     double (*zfunc_of_log_tau)(double)) {
+
+    int l_max = m->l_size-1;
+    int q_size = m->q_size;
+    int k_size = m->k_size;
+
+    /* For each momentum bin */
+    for (int i=0; i<q_size; i++) {
+        double q = m->q[i];
+
+        /* Derivative of the distribution function (5-point stencil) */
+        double y = 0.0001;
+        double dlnf0_dlnq = compute_dlnf0_dlnq(q, y);
+        double f0_eval = f0(q);
+
+        /* For each wavenumber */
+        for (int j=0; j<k_size; j++) {
+            double k = m->k[j];
+
+            /* The neutrino multipoles for this pair of (q,k) */
+            double *Psi = calloc(l_max+1,sizeof(double));
+
+            /* Retrieve the stored values from the multipole array */
+            for (int l=0; l<l_max; l++) {
+                Psi[l] = m->Psi[l * q_size * k_size + i * k_size + j];
+            }
+
+            evolve_gsl(&Psi, ptdat, q, k, l_max, tau_ini, tau_fin, mass, dlnf0_dlnq, tol, zfunc_of_log_tau);
+
+            printf("%f %f %e %e %e %e %e\n", q, k, Psi[0], Psi[1], Psi[2], Psi[3], f0_eval);
+
+            /* Store the result */
+            for (int l=0; l<l_max; l++) {
+                m->Psi[l * q_size * k_size + i * k_size + j] = Psi[l];
+            }
+
+            free(Psi);
+        }
+    }
+
+    return 0;
+}
 
 /* Convert the multipoles from Legendre basis to monomial basis, dropping all
  * terms with l > l_max_convert in the Legendre basis. Also divide the lth term

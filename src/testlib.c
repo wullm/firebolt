@@ -30,34 +30,8 @@
 
 const char *fname;
 
-/* Simple binomial coefficient function */
-static inline unsigned long long binomial(unsigned long n, unsigned long k) {
-    unsigned long long c = 1, i;
-    if (k > n-k) // take advantage of symmetry
-        k = n-k;
-
-    for (i = 1; i <= k; i++, n--) {
-        if (c/i > UINT_MAX/n) return 0;
-        c = c / i * n + c % i * n / i;  // split c * n / i into (c / i * i + c % i) * n / i
-    }
-
-    return c;
-}
-
-/* Generalized binomial coefficient, also valid for non-integer n */
-static inline double fbinomial(double n, double k) {
-    return exp(lgamma(n+1) - lgamma(k+1) - lgamma(n-k+1));
-}
-
-static inline void kernel_transfer_function(struct kernel *the_kernel) {
-    double k = the_kernel->k;
-    double kern = (k > 0) ? rend_interp(k, log(2150), 0) : 0.f;
-    the_kernel->kern = kern;
-}
-
 int main(int argc, char *argv[]) {
     printf("OK\n");
-
 
     /* Read the gaussian random field */
     int N;
@@ -159,140 +133,19 @@ int main(int argc, char *argv[]) {
     initMultipoles(&mmono, k_size, q_steps, l_size, q_min, q_max, k_min, k_max);
 
     /* Calculate the multipoles */
-
-    /* For each momentum bin */
-    for (int i=0; i<m.q_size; i++) {
-        double q = m.q[i];
-
-        /* Derivative of the distribution function (5-point stencil) */
-        double y = 0.0001;
-        double dlnf0_dlnq = compute_dlnf0_dlnq(q, y);
-        double f0_eval = f0(q);
-
-        /* For each wavenumber */
-        for (int j=0; j<m.k_size; j++) {
-            double k = m.k[j];
-
-            /* The neutrino multipoles */
-            double *Psi = calloc(l_max+1,sizeof(double));
-
-            /* Retrieve the stored values from the multipole array */
-            for (int l=0; l<l_max; l++) {
-                Psi[l] = m.Psi[l * q_steps * k_size + i * k_size + j];
-            }
-
-            evolve_gsl(&Psi, &ptdat, &bg, q, k, l_max, tau_ini, tau_fin, M, dlnf0_dlnq, tol);
-
-            printf("%f %f %e %e %e %e %e\n", q, k, Psi[0], Psi[1], Psi[2], Psi[3], f0_eval);
-
-            /* Store the result */
-            // for (int l=0; l<l_size; l++) {
-            //     m.Psi[l * q_steps * k_size + i * k_size + j] = Psi[l];
-            // }
-
-            // /* Store the result */
-            // for (int l=0; l<15; l++) {
-            //     /* Expand the Legendre polynomial */
-            //     for (int n=0; n<=ceil(l/2); n++) {
-            //         double b1 = binomial(l, n);
-            //         double b2 = binomial(2*(l-n), l);
-            //         double factor = pow(0.5,l) * pow(-1, n) * b1 * b2 * (2*l + 1) * pow(-1, l);
-            //
-            //         int this = (l - 2*n);
-            //         if (this < l_size)
-            //         m.Psi[this * q_steps * k_size + i * k_size + j] += factor * Psi[l] / pow(k, this);
-            //     }
-            // }
-
-            /* Store the result */
-            for (int l=0; l<l_max; l++) {
-                m.Psi[l * q_steps * k_size + i * k_size + j] = Psi[l];
-            }
-
-            // /* Store the result */
-            // for (int n=0; n<l_size; n++) {
-            //     /* Expand the Legendre polynomial */
-            //     for (int l=0; l<=n; l++) {
-            //         double b1 = binomial(n, l);
-            //         double b2 = fbinomial((n+l-1)/2., n);
-            //         double factor = pow(2,n) * b1 * b2 * (2*n + 1) * pow(-1, n);
-            //
-            //         if (l==12) {
-            //             printf("%e\n", factor * Psi[n] / pow(k, l));
-            //         }
-            //
-            //         if (l < l_size) {
-            //             mmono.Psi[l * q_steps * k_size + i * k_size + j] += factor * m.Psi[n * q_steps * k_size + i * k_size + j] / pow(k, l);
-            //         }
-            //     }
-            // }
-
-            free(Psi);
-        }
-    }
-
+    evolveMultipoles(&m, &ptdat, tau_ini, tau_fin, tol, M, bg_z_at_log_tau);
 
     /* Also convert to monomial basis */
     convertMultipoleBasis_L2m(&m, &mmono, l_size-1);
 
-
-    // /* For each momentum bin */
-    // for (int j=0; j<q_steps; j++) {
-    //     double dlogq = (log(q_max) - log(q_min))/q_steps;
-    //     double q = q_min * exp((j+0.5) * dlogq);
-    //
-    //     /* Derivative of the distribution function (5-point stencil) */
-    //     double y = 0.0001;
-    //     double dlnf0_dlnq = compute_dlnf0_dlnq(q, y);
-    //     double f0_eval = f0(q);
-    //
-    //     /* The neutrino multipoles */
-    //     double *Psi = calloc(l_max+1,sizeof(double));
-    //
-    //     /* Initial conditions are irrelevant and washed out by sources */
-    //     Psi[0] = 0;
-    //     Psi[1] = 0;
-    //     Psi[2] = 0;
-    //     Psi[3] = 0;
-    //
-    //     evolve_gsl(&Psi, &ptdat, &bg, q, k, l_max, tau_ini, tau_fin, M, dlnf0_dlnq, tol);
-    //
-    //     printf("%f %e %e %e %e %e\n", q, Psi[0], Psi[1], Psi[2], Psi[3], f0_eval);
-    //     // printf("%f %e %e %e %e\n", q, Psi[0]*f0_eval, Psi[1]*f0_eval, Psi[2]*f0_eval, Psi[3]*f0_eval);
-    //
-    //     free(Psi);
-    // }
-    //
     printf("Done with integrating. Processing the moments.\n");
-
-    /* For each wavenumber */
-    for (int j=0; j<m.k_size; j++) {
-        double k = mmono.k[j];
-        printf("You what mae? %f\n", k);
-    }
-
 
     /* Initialize the multipole interpolation splines */
     initMultipoleInterp(&mmono);
 
-    /* Try it out */
-    double kk = 0.6;
-    double Psi = multipoleInterp(kk);
-    printf("Interpolation gave %f %e\n", kk, Psi);
-
-    /* Switch to a different multipole */
-    switchMultipoleInterp(&m, 1, 1);
-    Psi = multipoleInterp(kk);
-    printf("Interpolation gave %f %e\n", kk, Psi);
-
-    /* Switch to a different multipole */
-    switchMultipoleInterp(&m, 2, 1);
-    Psi = multipoleInterp(kk);
-    printf("Interpolation gave %f %e\n", kk, Psi);
-
-
+    /* Generate grids with the monomial multipoles */
     initGrids(&pars, &mmono, &grs);
-    generateGrids(&pars, &us, &cosmo, &mmono, fbox, &grs);
+    generateGrids(&pars, &us, &mmono, fbox, &grs);
 
     /* Try evaluating */
     double e1,e2,f0_eval;

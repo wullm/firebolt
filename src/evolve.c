@@ -76,68 +76,18 @@ int func(double tau, const double Psi[], double dPsi[], void *ode_pars) {
     return GSL_SUCCESS;
 }
 
-/* No longer needed... */
-// int Jac(double tau, const double Psi[], double *J, double dfdt[], void *params) {
-//     double *pars = (double*)params;
-//     double k = pars[0];
-//     double q = pars[1];
-//     double M = pars[2];
-//     int l_max = (int) pars[3];
-//     double dlnf0_dlnq = pars[4];
-//
-//     double logt = log(tau);
-//     double z = bg_z_at_log_tau(logt);
-//     double a = 1./(1+z);
-//     double eps = hypot(q, a*M);
-//
-//     double qke = q*k/eps;
-//
-//     double h_prime = rend_interp(k, logt, 0);
-//     double eta_prime = rend_interp(k, logt, 1);
-//
-//     double h_prime_prime = rend_dydt_interp(k, logt, 0);
-//     double eta_prime_prime = rend_dydt_interp(k, logt, 1);
-//
-//     J[0 * (l_max+1) + 1] = -qke;
-//     J[1 * (l_max+1) + 0] = qke/3;
-//     J[1 * (l_max+1) + 2] = -2*qke/3;
-//     J[2 * (l_max+1) + 1] = 2*qke/5;
-//     J[2 * (l_max+1) + 3] = -3*qke/5;
-//     for (int l=3; l<l_max; l++) {
-//         J[l * (l_max+1) + l-1] = l*qke/(2*l+1.);
-//         J[l * (l_max+1) + l+1] = -(l+1)*qke/(2*l+1.);
-//     }
-//     J[l_max * (l_max+1) + l_max-1] = l_max*qke/(2*l_max+1.) + (l_max+1)*qke/(2*l_max+1.);
-//     J[l_max * (l_max+1) + l_max] = -(l_max+1)/tau;
-//
-//     dfdt[0] = h_prime_prime/6 * dlnf0_dlnq;
-//     dfdt[1] = 0.;
-//     dfdt[2] = -(h_prime_prime/15 + 2*eta_prime_prime/5) * dlnf0_dlnq;
-//     for (int l=3; l<l_max+1; l++) {
-//         dfdt[l] = 0.;
-//     }
-//
-//     return GSL_SUCCESS;
-// }
-
-int evolve_gsl(double **Psi, const struct perturb_data *ptdat, const struct background *bg,
+int evolve_gsl(double **Psi, const struct perturb_data *ptdat,
                double q, double k, int l_max, double tau_ini, double tau_final, double M,
-               double dlnf0_dlnq, double tolerance) {
+               double dlnf0_dlnq, double tolerance, double (*zfunc_of_log_tau)(double)) {
 
-    /* Coldsonte */
-    // double params[5];
-    // params[0] = k;
-    // params[1] = q;
-    // params[2] = M;
-    // params[3] = l_max;
-    // params[4] = dlnf0_dlnq;
+    /* Constants */
     op.params = malloc(5 * sizeof(double));
     op.params[0] = k;
     op.params[1] = q;
     op.params[2] = M;
     op.params[3] = l_max;
     op.params[4] = dlnf0_dlnq;
-    op.zfunc_of_log_tau = bg_z_at_log_tau;
+    op.zfunc_of_log_tau = zfunc_of_log_tau;
 
     gsl_odeiv2_system sys = {func, NULL, l_max+1, &op};
     double t = tau_ini, t1 = tau_final;

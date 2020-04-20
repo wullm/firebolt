@@ -42,7 +42,6 @@ static inline void kernel_transfer_function(struct kernel *the_kernel) {
  * spectrum to the random phases. The necessary transfer functions are in trs.
  */
  int generateGrids(const struct params *pars, const struct units *us,
-                   const struct cosmology *cosmo,
                    const struct multipoles *m,
                    const fftw_complex *grf,
                    struct grids *grs) {

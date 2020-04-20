@@ -37,7 +37,6 @@ int initGrids(const struct params *pars, const struct multipoles *m,
 int cleanGrids(struct grids *grs);
 
 int generateGrids(const struct params *pars, const struct units *us,
-                  const struct cosmology *cosmo,
                   const struct multipoles *m,
                   const fftw_complex *grf,
                   struct grids *grs);

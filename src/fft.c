@@ -113,24 +113,3 @@ int fft_c2r_export(fftw_complex *farr, int N, double boxlen, const char *fname) 
 
     return 0;
 }
-
-/* Quick and dirty write binary boxes */
-void write_floats(const char *fname, const float *floats, int n) {
-  FILE *f = fopen(fname, "wb");
-  fwrite(floats, sizeof(float), n, f);
-  fclose(f);
-}
-
-/* Quick and dirty write binary boxes */
-void write_doubles_as_floats(const char *fname, const double *doubles, int n) {
-  /* Convert to floats */
-  float *floats = (float *)malloc(sizeof(float) * n);
-  for (int i = 0; i < n; i++) {
-    floats[i] = (float)doubles[i];
-  }
-
-  FILE *f = fopen(fname, "wb");
-  fwrite(floats, sizeof(float), n, f);
-  fclose(f);
-  free(floats);
-}

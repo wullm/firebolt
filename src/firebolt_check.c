@@ -272,7 +272,7 @@ int main(int argc, char *argv[]) {
         double a = 1./(1+z);
         double eps = hypot(q, a*M);
 
-        evolve_gsl(&Psi, &ptdat, &bg, q, k, l_max, tau_ini, tau_fin, M, dlnf0_dlnq, tol);
+        evolve_gsl(&Psi, &ptdat, q, k, l_max, tau_ini, tau_fin, M, dlnf0_dlnq, tol, bg_z_at_log_tau);
 
         /* At the final time, compare with the expected CLASS results */
         // double eps_fin = hypot(q, a_fin*M);
