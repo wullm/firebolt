@@ -30,6 +30,7 @@
 
 const char *fname;
 
+/* Simple binomial coefficient function */
 static inline unsigned long long binomial(unsigned long n, unsigned long k) {
     unsigned long long c = 1, i;
     if (k > n-k) // take advantage of symmetry
@@ -43,7 +44,8 @@ static inline unsigned long long binomial(unsigned long n, unsigned long k) {
     return c;
 }
 
-double fbinomial(double n, double k) {
+/* Generalized binomial coefficient, also valid for non-integer n */
+static inline double fbinomial(double n, double k) {
     return exp(lgamma(n+1) - lgamma(k+1) - lgamma(n-k+1));
 }
 
@@ -74,8 +76,6 @@ int main(int argc, char *argv[]) {
 
     printf("[kmin, kmax] = [%f, %f]\n", k_min, k_max);
 
-    printf("Test test %f %f %f\n", fbinomial(1,2), fbinomial(2.5,1), fbinomial(10.5,5));
-
     /* Fourier transform */
     fftw_complex *fbox = (fftw_complex*) fftw_malloc(N*N*(N/2+1)*sizeof(fftw_complex));
     fftw_plan r2c = fftw_plan_dft_r2c_3d(N, N, N, box, fbox, FFTW_ESTIMATE);
@@ -97,7 +97,8 @@ int main(int argc, char *argv[]) {
     struct background bg;
     struct background_title_ids bti;
     struct perturb_data ptdat;
-    struct multipoles m;
+    struct multipoles m; //multipoles is standard Legendre basis
+    struct multipoles mmono; //multipoles in monomial basis
     struct grids grs;
 
     /* Read parameters & data */
@@ -151,8 +152,11 @@ int main(int argc, char *argv[]) {
 
     /* Initialize the multipoles */
     int k_size = 30;
+    initMultipoles(&m, k_size, q_steps, l_max, q_min, q_max, k_min, k_max);
+
+    /* Also initialize the multipoles in monomial basis (with much lower l_max) */
     int l_size = 12;
-    initMultipoles(&m, k_size, q_steps, l_size, q_min, q_max, k_min, k_max);
+    initMultipoles(&mmono, k_size, q_steps, l_size, q_min, q_max, k_min, k_max);
 
     /* Calculate the multipoles */
 
@@ -173,7 +177,7 @@ int main(int argc, char *argv[]) {
             double *Psi = calloc(l_max+1,sizeof(double));
 
             /* Retrieve the stored values from the multipole array */
-            for (int l=0; l<l_size; l++) {
+            for (int l=0; l<l_max; l++) {
                 Psi[l] = m.Psi[l * q_steps * k_size + i * k_size + j];
             }
 
@@ -201,26 +205,36 @@ int main(int argc, char *argv[]) {
             // }
 
             /* Store the result */
-            for (int n=0; n<l_size; n++) {
-                /* Expand the Legendre polynomial */
-                for (int l=0; l<=n; l++) {
-                    double b1 = binomial(n, l);
-                    double b2 = fbinomial((n+l-1)/2., n);
-                    double factor = pow(2,n) * b1 * b2 * (2*n + 1) * pow(-1, n);
-
-                    if (l==12) {
-                        printf("%e\n", factor * Psi[n] / pow(k, l));
-                    }
-
-                    if (l < l_size) {
-                        m.Psi[l * q_steps * k_size + i * k_size + j] += factor * Psi[n] / pow(k, l);
-                    }
-                }
+            for (int l=0; l<l_max; l++) {
+                m.Psi[l * q_steps * k_size + i * k_size + j] = Psi[l];
             }
+
+            // /* Store the result */
+            // for (int n=0; n<l_size; n++) {
+            //     /* Expand the Legendre polynomial */
+            //     for (int l=0; l<=n; l++) {
+            //         double b1 = binomial(n, l);
+            //         double b2 = fbinomial((n+l-1)/2., n);
+            //         double factor = pow(2,n) * b1 * b2 * (2*n + 1) * pow(-1, n);
+            //
+            //         if (l==12) {
+            //             printf("%e\n", factor * Psi[n] / pow(k, l));
+            //         }
+            //
+            //         if (l < l_size) {
+            //             mmono.Psi[l * q_steps * k_size + i * k_size + j] += factor * m.Psi[n * q_steps * k_size + i * k_size + j] / pow(k, l);
+            //         }
+            //     }
+            // }
 
             free(Psi);
         }
     }
+
+
+    /* Also convert to monomial basis */
+    convertMultipoleBasis_L2m(&m, &mmono, l_size-1);
+
 
     // /* For each momentum bin */
     // for (int j=0; j<q_steps; j++) {
@@ -253,13 +267,13 @@ int main(int argc, char *argv[]) {
 
     /* For each wavenumber */
     for (int j=0; j<m.k_size; j++) {
-        double k = m.k[j];
+        double k = mmono.k[j];
         printf("You what mae? %f\n", k);
     }
 
 
     /* Initialize the multipole interpolation splines */
-    initMultipoleInterp(&m);
+    initMultipoleInterp(&mmono);
 
     /* Try it out */
     double kk = 0.6;
@@ -277,8 +291,8 @@ int main(int argc, char *argv[]) {
     printf("Interpolation gave %f %e\n", kk, Psi);
 
 
-    initGrids(&pars, &m, &grs);
-    generateGrids(&pars, &us, &cosmo, &m, fbox, &grs);
+    initGrids(&pars, &mmono, &grs);
+    generateGrids(&pars, &us, &cosmo, &mmono, fbox, &grs);
 
     /* Try evaluating */
     double e1,e2,f0_eval;
@@ -296,6 +310,7 @@ int main(int argc, char *argv[]) {
 
     /* Clean up the remaining structures */
     cleanGrids(&grs);
+    cleanMultipoles(&mmono);
     cleanMultipoles(&m);
     cleanMultipoleInterp(&m);
     cleanPerturb(&ptdat);

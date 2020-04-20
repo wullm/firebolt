@@ -33,6 +33,7 @@ struct multipoles {
 
 int initMultipoles(struct multipoles *m, int k_size, int q_size, int l_size,
                    double q_min, double q_max, double k_min, double k_max);
+int convertMultipoleBasis_L2m(struct multipoles *mL, struct multipoles *mm, int l_max);                   
 int cleanMultipoles(struct multipoles *m);
 
 
