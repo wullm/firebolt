@@ -43,9 +43,9 @@ all:
 	$(GCC) src/firebolt_check.c -o firebolt_check $(INCLUDES) $(OBJECTS) $(LIBRARIES) $(CFLAGS)
 	$(GCC) src/firebolt_render.c -o firebolt_render $(INCLUDES) $(OBJECTS) $(LIBRARIES) $(CFLAGS)
 
-	$(GCC) -shared -o libfirebolt.so $(INCLUDES) $(OBJECTS) $(LIBRARIES) $(CFLAGS)
+	$(GCC) -shared -o libfirebolt.so $(INCLUDES) lib/multipoles.o lib/multipole_interp.o lib/evolve.o lib/fft.o lib/grids.o lib/evaluate.o lib/input.o lib/perturb_data.o lib/perturb_interp.o $(LIBRARIES) $(CFLAGS)
 
-	$(GCC) src/testlib.c -o testlib -L/home/qvgd89/firebolt -lfirebolt -lfftw3 $(INCLUDES) $(CFLAGS) -lm -Wl,-rpath=/home/qvgd89/firebolt
+	$(GCC) src/testlib.c -o testlib lib/background.o lib/background_interp.o -L/home/qvgd89/firebolt -lfirebolt -lfftw3 -lgsl -lgslcblas $(INCLUDES) $(CFLAGS) -lm -Wl,-rpath=/home/qvgd89/firebolt
 
 minIni:
 	cd parser && make

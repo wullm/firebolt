@@ -88,12 +88,12 @@ static inline void kernel_transfer_function(struct kernel *the_kernel) {
             double *source_address = box;
             memcpy(destination, source_address, (N*N*N) * sizeof(double));
 
-            /* Export the real box */
-            char dbox_fname[DEFAULT_STRING_LENGTH];
-            sprintf(dbox_fname, "grid_l%d_q%d.hdf5", index_l, index_q);
-            // fft_c2r_export(fbox, N, boxlen, dbox_fname);
-            writeGRF_H5(box, N, boxlen, dbox_fname);
-            printf("Density field exported to '%s'.\n", dbox_fname);
+            // /* Export the real box */
+            // char dbox_fname[DEFAULT_STRING_LENGTH];
+            // sprintf(dbox_fname, "grid_l%d_q%d.hdf5", index_l, index_q);
+            // // fft_c2r_export(fbox, N, boxlen, dbox_fname);
+            // writeGRF_H5(box, N, boxlen, dbox_fname);
+            // printf("Density field exported to '%s'.\n", dbox_fname);
         }
     }
 

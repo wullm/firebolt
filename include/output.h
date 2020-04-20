@@ -21,12 +21,16 @@
 #define OUTPUT_H
 
 #include <hdf5.h>
+#include <fftw3.h>
 
 #include "perturb_data.h"
 
 int write_perturb(struct perturb_data *data, struct params *pars,
                   struct units *us, char *fname);
 
+
+/* Some useful I/O functions for debugging */
 int writeGRF_H5(const double *box, int N, double box_len, const char *fname);
+int fft_c2r_export(fftw_complex *farr, int N, double boxlen, const char *fname);
 
 #endif

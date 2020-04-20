@@ -46,6 +46,34 @@ static inline double fbinomial(double n, double k) {
     return exp(lgamma(n+1) - lgamma(k+1) - lgamma(n-k+1));
 }
 
+
+
+/* Fermi-Dirac distribution function */
+double f0(double q) {
+    double ksi = 0; //potential
+    return 1.0/pow(2*M_PI,3)*(1./(exp(q-ksi)+1.) +1./(exp(q+ksi)+1.));
+}
+
+/* Logarithmic derivative of distribution function */
+double compute_dlnf0_dlnq(double q, double h) {
+    double df0_dq = 0, dlnf0_dlnq;
+
+    df0_dq += (1./12.) * f0(q - 2*h);
+    df0_dq -= (8./12.) * f0(q - 1*h);
+    df0_dq += (8./12.) * f0(q + 1*h);
+    df0_dq -= (1./12.) * f0(q + 2*h);
+    df0_dq /= h;
+
+    double f0_eval = f0(q);
+    if (fabs(f0_eval) > 0) {
+        dlnf0_dlnq = q/f0_eval * df0_dq;
+    } else {
+        dlnf0_dlnq = -q;
+    }
+
+    return dlnf0_dlnq;
+}
+
 int initMultipoles(struct multipoles *m, int k_size, int q_size, int l_size,
                    double q_min, double q_max, double k_min, double k_max) {
 

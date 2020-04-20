@@ -69,7 +69,4 @@ void fft_execute(fftw_plan plan);
 void fft_apply_kernel(fftw_complex *write, const fftw_complex *read, int N,
                       double len, void (*kern)(struct kernel* the_kernel));
 
-/* Some useful I/O functions for debugging */
-int fft_c2r_export(fftw_complex *farr, int N, double boxlen, const char *fname);
-
 #endif

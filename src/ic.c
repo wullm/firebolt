@@ -22,31 +22,9 @@
 #include <string.h>
 #include <math.h>
 #include "../include/ic.h"
+#include "../include/multipoles.h"
 
-/* Fermi-Dirac distribution function */
-double f0(double q) {
-    double ksi = 0; //potential
-    return 1.0/pow(2*M_PI,3)*(1./(exp(q-ksi)+1.) +1./(exp(q+ksi)+1.));
-}
 
-double compute_dlnf0_dlnq(double q, double h) {
-    double df0_dq = 0, dlnf0_dlnq;
-
-    df0_dq += (1./12.) * f0(q - 2*h);
-    df0_dq -= (8./12.) * f0(q - 1*h);
-    df0_dq += (8./12.) * f0(q + 1*h);
-    df0_dq -= (1./12.) * f0(q + 2*h);
-    df0_dq /= h;
-
-    double f0_eval = f0(q);
-    if (fabs(f0_eval) > 0) {
-        dlnf0_dlnq = q/f0_eval * df0_dq;
-    } else {
-        dlnf0_dlnq = -q;
-    }
-
-    return dlnf0_dlnq;
-}
 
 
 /* Generate initial conditions for momentum q and wavenumber k at conformal

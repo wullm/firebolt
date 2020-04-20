@@ -26,7 +26,9 @@
 #include <complex.h>
 #include <fftw3.h>
 
-#include "../include/firebolt.h"
+#include "../include/firebolt_min.h"
+#include "../include/background.h"
+#include "../include/background_interp.h"
 
 const char *fname;
 
@@ -80,20 +82,12 @@ int main(int argc, char *argv[]) {
     readUnits(&us, fname);
     readCosmology(&cosmo, fname);
     readPerturb(&pars, &us, &ptdat);
+    rend_interp_init(&ptdat);
+
+    /* Read background cosmology */
     readBackground(&pars, &us, &cosmo, &bg);
     parseBackgroundTitles(&bg, &bti);
-
-    /* Initialize interpolation splines */
-    rend_interp_init(&ptdat);
     bg_interp_init(&bg);
-
-    // /* Apply transfer function */
-    // rend_interp_switch_source(&ptdat, 4, 0);
-    // fft_apply_kernel(fbox, fbox, N, box_len, kernel_transfer_function);
-    //
-    // /* Export the real box */
-    // fft_c2r_export(fbox, N, box_len, "mooi.hdf5");
-
 
     pars.GridSize = N;
     pars.BoxLen = box_len;

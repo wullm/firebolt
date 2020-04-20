@@ -32,6 +32,12 @@ struct multipoles {
   double *q;
 };
 
+
+/* Fermi-Dirac distribution function */
+double f0(double q);
+double compute_dlnf0_dlnq(double q, double h);
+
+/* Multipole functions */
 int initMultipoles(struct multipoles *m, int k_size, int q_size, int l_size,
                    double q_min, double q_max, double k_min, double k_max);
 int evolveMultipoles(struct multipoles *m, const struct perturb_data *ptdat,
@@ -39,6 +45,7 @@ int evolveMultipoles(struct multipoles *m, const struct perturb_data *ptdat,
                      double (*zfunc_of_log_tau)(double));
 int convertMultipoleBasis_L2m(struct multipoles *mL, struct multipoles *mm, int l_max);
 int cleanMultipoles(struct multipoles *m);
+
 
 
 #endif

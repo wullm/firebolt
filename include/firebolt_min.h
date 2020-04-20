@@ -17,16 +17,13 @@
  *
  ******************************************************************************/
 
-#ifndef FIREBOLT_H
-#define FIREBOLT_H
+#ifndef FIREBOLT_MIN_H
+#define FIREBOLT_MIN_H
 
 #include "input.h"
 #include "output.h"
-#include "background.h"
-#include "background_interp.h"
 #include "perturb_data.h"
 #include "perturb_interp.h"
-#include "ic.h"
 #include "evolve.h"
 
 #include "fft.h"
@@ -34,9 +31,5 @@
 #include "multipole_interp.h"
 #include "grids.h"
 #include "evaluate.h"
-
-#define TXT_RED "\033[31;1m"
-#define TXT_GREEN "\033[32;1m"
-#define TXT_RESET "\033[0m"
 
 #endif

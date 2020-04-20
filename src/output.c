@@ -19,6 +19,7 @@
 
 #include <string.h>
 #include "../include/output.h"
+#include "../include/fft.h"
 
 int write_perturb(struct perturb_data *data, struct params *pars,
                   struct units *us, char *fname) {
@@ -236,6 +237,34 @@ int writeGRF_H5(const double *box, int N, double boxlen, const char *fname) {
 
     /* Close the file */
     H5Fclose(h_file);
+
+    return 0;
+}
+
+
+/* Perform real-to-complex FFT and export, then free the memory */
+int fft_c2r_export(fftw_complex *farr, int N, double boxlen, const char *fname) {
+    /* Create configuration space array */
+    double *box = (double*) fftw_malloc(N*N*N*sizeof(double));
+
+    /* Copy the complex array, to prevent in-place calculation */
+    fftw_complex *fbox = (fftw_complex*) fftw_malloc(N*N*(N/2+1)*sizeof(fftw_complex));
+    memcpy(fbox, farr, N*N*(N/2+1)*sizeof(fftw_complex));
+
+    /* Create FFT plan */
+    fftw_plan c2r = fftw_plan_dft_c2r_3d(N, N, N, fbox, box, FFTW_ESTIMATE);
+
+    /* Execute and normalize */
+    fft_execute(c2r);
+    fft_normalize_c2r(box,N,boxlen);
+
+    /* Export as HDF5 */
+    writeGRF_H5(box, N, boxlen, fname);
+
+    /* Free */
+    fftw_destroy_plan(c2r);
+    fftw_free(box);
+    fftw_free(fbox);
 
     return 0;
 }
