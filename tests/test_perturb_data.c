@@ -15,7 +15,7 @@ int main() {
     const char fname[] = "test_cosmology.ini";
     struct params pars;
     struct units us;
-    struct cosmology cosmo;
+    struct cosmology_params cosmo;
     struct perturb_data ptdat;
 
     readParams(&pars, fname);

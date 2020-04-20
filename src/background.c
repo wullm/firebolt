@@ -120,7 +120,7 @@ void readTitles(char *line, enum background_format format, char **titles) {
 }
 
 int readBackground(const struct params *pars, const struct units *us,
-                   const struct cosmology *cosmo, struct background *bg) {
+                   const struct cosmology_params *cosmo, struct background *bg) {
     const char *fname = pars->BackgroundFile;
     const char *formatString = pars->BackgroundFormat;
     enum background_format format;

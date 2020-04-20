@@ -84,7 +84,7 @@ int readUnits(struct units *us, const char *fname) {
     return 0;
 }
 
-int readCosmology(struct cosmology *cosmo, const char *fname) {
+int readCosmology(struct cosmology_params *cosmo, const char *fname) {
      cosmo->h = ini_getd("Cosmology", "h", 0.70, fname);
      cosmo->T_nu0 = ini_getd("Cosmology", "T_nu0", 1.951757805, fname);
      cosmo->M_nu = ini_getd("Cosmology", "M_nu", 0.02, fname);

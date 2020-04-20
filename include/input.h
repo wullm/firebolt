@@ -76,7 +76,7 @@ struct units {
     double BackgroundUnitLengthMetres;
 };
 
-struct cosmology {
+struct cosmology_params {
     double h;
     double T_nu0;
     double M_nu;
@@ -85,7 +85,7 @@ struct cosmology {
 
 int readParams(struct params *parser, const char *fname);
 int readUnits(struct units *us, const char *fname);
-int readCosmology(struct cosmology *cosmo, const char *fname);
+int readCosmology(struct cosmology_params *cosmo, const char *fname);
 
 int cleanParams(struct params *parser);
 

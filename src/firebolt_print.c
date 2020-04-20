@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
     /* Firebolt structures */
     struct params pars;
     struct units us;
-    struct cosmology cosmo;
+    struct cosmology_params cosmo;
     struct background bg;
     struct background_title_ids bti;
     struct perturb_data ptdat;

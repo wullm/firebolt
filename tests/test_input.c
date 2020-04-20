@@ -33,7 +33,7 @@ int main() {
     assert(us.BackgroundUnitLengthMetres == 3.085677581282e22);
 
     /* Test reading cosmology */
-    struct cosmology cosmo;
+    struct cosmology_params cosmo;
     readCosmology(&cosmo, fname);
 
     assert(cosmo.h == 0.67556);

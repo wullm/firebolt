@@ -57,7 +57,7 @@ enum background_format {
 };
 
 int readBackground(const struct params *pars, const struct units *us,
-                   const struct cosmology *cosmo, struct background *bg);
+                   const struct cosmology_params *cosmo, struct background *bg);
 int cleanBackground(struct background *bg);
 int parseBackgroundTitles(const struct background *bg,
                           struct background_title_ids *bti);
