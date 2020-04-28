@@ -42,7 +42,7 @@ int initMultipoles(struct multipoles *m, int k_size, int q_size, int l_size,
                    double q_min, double q_max, double k_min, double k_max);
 int evolveMultipoles(struct multipoles *m, const struct perturb_data *ptdat,
                      double tau_ini, double tau_fin, double tol, double mass,
-                     double (*zfunc_of_log_tau)(double));
+                     short verbose);
 int convertMultipoleBasis_L2m(struct multipoles *mL, struct multipoles *mm, int l_max);
 int cleanMultipoles(struct multipoles *m);
 

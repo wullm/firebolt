@@ -48,6 +48,7 @@ int readParams(struct params *pars, const char *fname) {
      pars->NumberMomentumBins = ini_getl("Simulation", "NumberMomentumBins", 28, fname);
      pars->InitialTime = ini_getd("Simulation", "InitialTime", 0.05, fname);
      pars->Tolerance = ini_getd("Simulation", "Tolerance", 1e-10, fname);
+     pars->Verbose = ini_getl("Simulation", "Verbose", 0, fname);
 
      /* Single run parameters */
      pars->kSingle = ini_getd("Single", "k", 0.01, fname);

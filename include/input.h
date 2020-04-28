@@ -45,6 +45,7 @@ struct params {
     double MaxMomentum;
     double InitialTime;
     double Tolerance;
+    short Verbose;
 
     /* Single run parameters */
     double kSingle;

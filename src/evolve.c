@@ -32,8 +32,6 @@
 struct ode_pars {
     /* Array of parameters of the diferential equation */
     double *params;
-    /* Reference to a function that gives redshift z as function of log(tau) */
-    double (*zfunc_of_log_tau)(double);
 };
 
 struct ode_pars op;
@@ -48,11 +46,10 @@ int func(double tau, const double Psi[], double dPsi[], void *ode_pars) {
     double M = params[2]; //mass
     int l_max = (int) params[3]; //maximum multipole
     double dlnf0_dlnq = params[4]; //logarithmic derivative of distr. func.
-    double (*zfunc_of_log_tau)(double) = ops->zfunc_of_log_tau;
 
     /* Compute the necessary quantities */
     double logt = log(tau);
-    double z = zfunc_of_log_tau(logt); //redshift
+    double z = perturb_zAtLogTau(logt); //redshift
     double a = 1./(1+z); //scale factor
     double eps = hypot(q, a*M); //dimensionless energy
     double qke = q*k/eps;
@@ -78,7 +75,7 @@ int func(double tau, const double Psi[], double dPsi[], void *ode_pars) {
 
 int evolve_gsl(double **Psi, const struct perturb_data *ptdat,
                double q, double k, int l_max, double tau_ini, double tau_final, double M,
-               double dlnf0_dlnq, double tolerance, double (*zfunc_of_log_tau)(double)) {
+               double dlnf0_dlnq, double tolerance) {
 
     /* Constants */
     op.params = malloc(5 * sizeof(double));
@@ -87,7 +84,6 @@ int evolve_gsl(double **Psi, const struct perturb_data *ptdat,
     op.params[2] = M;
     op.params[3] = l_max;
     op.params[4] = dlnf0_dlnq;
-    op.zfunc_of_log_tau = zfunc_of_log_tau;
 
     gsl_odeiv2_system sys = {func, NULL, l_max+1, &op};
     double t = tau_ini, t1 = tau_final;

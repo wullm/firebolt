@@ -26,6 +26,7 @@ int initPerturbInterp(const struct perturb_data *pt);
 int switchPerturbInterp(const struct perturb_data *pt, int index_src, int spline);
 int cleanPerturbInterp(const struct perturb_data *pt);
 double perturbInterp(double k, double tau, int spline);
+double perturb_zAtLogTau(double log_tau);
 // double rend_dydt_interp(double k, double tau, int spline);
 
 #endif

@@ -109,7 +109,7 @@ int initMultipoles(struct multipoles *m, int k_size, int q_size, int l_size,
 
 int evolveMultipoles(struct multipoles *m, const struct perturb_data *ptdat,
                      double tau_ini, double tau_fin, double tol, double mass,
-                     double (*zfunc_of_log_tau)(double)) {
+                     short verbose) {
 
     int l_max = m->l_size-1;
     int q_size = m->q_size;
@@ -136,9 +136,11 @@ int evolveMultipoles(struct multipoles *m, const struct perturb_data *ptdat,
                 Psi[l] = m->Psi[l * q_size * k_size + i * k_size + j];
             }
 
-            evolve_gsl(&Psi, ptdat, q, k, l_max, tau_ini, tau_fin, mass, dlnf0_dlnq, tol, zfunc_of_log_tau);
+            evolve_gsl(&Psi, ptdat, q, k, l_max, tau_ini, tau_fin, mass, dlnf0_dlnq, tol);
 
-            printf("%f %f %e %e %e %e %e\n", q, k, Psi[0], Psi[1], Psi[2], Psi[3], f0_eval);
+            if (verbose) {
+                printf("%f %f %e %e %e %e %e\n", q, k, Psi[0], Psi[1], Psi[2], Psi[3], f0_eval);
+            }
 
             /* Store the result */
             for (int l=0; l<l_max; l++) {

@@ -222,7 +222,7 @@ int main(int argc, char *argv[]) {
         double a = 1./(1+z);
         double eps = hypot(q, a*M);
 
-        evolve_gsl(&Psi, &ptdat, q, k, l_max, tau_ini, tau_fin, M, dlnf0_dlnq, tol, bg_z_at_log_tau);
+        evolve_gsl(&Psi, &ptdat, q, k, l_max, tau_ini, tau_fin, M, dlnf0_dlnq, tol);
 
         /* Do the momentum integrals */
         rho_delta_nu += q*q*eps*Psi[0]*f0_eval*dq;

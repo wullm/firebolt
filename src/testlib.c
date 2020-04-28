@@ -27,10 +27,19 @@
 #include <fftw3.h>
 
 #include "../include/firebolt_min.h"
-#include "../include/background.h"
-#include "../include/background_interp.h"
 
 const char *fname;
+
+static inline void tet(struct kernel *the_kernel) {
+    double k = the_kernel->k;
+    double logt = log(12250.);
+
+    if (k == 0) {
+        the_kernel->kern = 0.f;
+    } else {
+        the_kernel->kern = perturbInterp(k, logt, 0);
+    }
+}
 
 int main(int argc, char *argv[]) {
     printf("OK\n");
@@ -70,8 +79,6 @@ int main(int argc, char *argv[]) {
     struct params pars;
     struct units us;
     struct cosmology_params cosmo;
-    struct background bg;
-    struct background_title_ids bti;
     struct perturb_data ptdat;
     struct multipoles m; //multipoles is standard Legendre basis
     struct multipoles mmono; //multipoles in monomial basis
@@ -83,11 +90,6 @@ int main(int argc, char *argv[]) {
     readCosmology(&cosmo, fname);
     readPerturb(&pars, &us, &ptdat);
     initPerturbInterp(&ptdat);
-
-    /* Read background cosmology */
-    readBackground(&pars, &us, &cosmo, &bg);
-    parseBackgroundTitles(&bg, &bti);
-    bg_interp_init(&bg);
 
     pars.GridSize = N;
     pars.BoxLen = box_len;
@@ -106,8 +108,8 @@ int main(int argc, char *argv[]) {
 
     printf("\n");
     printf("[k] = [%f]\n", k);
-    printf("[tau_ini, z_ini] = [%f, %.2e]\n", tau_ini, bg_z_at_log_tau(log(tau_ini)));
-    printf("[tau_fin, z_fin] = [%f, %.2e]\n", tau_fin, bg_z_at_log_tau(log(tau_fin)));
+    printf("[tau_ini, z_ini] = [%f, %.2e]\n", tau_ini, perturb_zAtLogTau(log(tau_ini)));
+    printf("[tau_fin, z_fin] = [%f, %.2e]\n", tau_fin, perturb_zAtLogTau(log(tau_fin)));
     printf("[l_max, q_steps, q_max, tol] = [%d, %d, %.1f, %.3e]\n", l_max, q_steps, q_max, tol);
     printf("\n");
 
@@ -127,7 +129,7 @@ int main(int argc, char *argv[]) {
     initMultipoles(&mmono, k_size, q_steps, l_size, q_min, q_max, k_min, k_max);
 
     /* Calculate the multipoles */
-    evolveMultipoles(&m, &ptdat, tau_ini, tau_fin, tol, M, bg_z_at_log_tau);
+    evolveMultipoles(&m, &ptdat, tau_ini, tau_fin, tol, M, pars.Verbose);
 
     /* Also convert to monomial basis */
     convertMultipoleBasis_L2m(&m, &mmono, l_size-1);
@@ -146,23 +148,40 @@ int main(int argc, char *argv[]) {
     for (int i=0; i<m.q_size; i++) {
         double q = m.q[i];
         f0_eval = f0(q);
-        e1 = evalDensity(&grs, 1./64.*256., 14./64.*256, 60./64.*256., 1., 0., 0., i);
-        e2 = evalDensity(&grs, 1./64.*256., 14./64.*256, 60./64.*256., -1., 0., 0., i);
+        e1 = evalDensity(&grs, 58.921163, 2.016263, 3.615894, -0.964885, 0.261914, 0.019957, i);
+        e2 = e1 = evalDensity(&grs, 58.921163, 2.016263, 3.615894, 0.964885, 0.261914, 0.019957, i);
+        // e1 = evalDensity(&grs, 1./64.*256., 14./64.*256, 60./64.*256., 1., 0., 0., i);
+        // e2 = evalDensity(&grs, 1./64.*256., 14./64.*256, 60./64.*256., -1., 0., 0., i);
         printf("%f\t %f\t %f\t %f\t %f\n", q, e1, e2, f0_eval*(1+e1), f0_eval*(1+e2));
     }
 
+    // /* Create FFT plan */
+    // fftw_plan c2r = fftw_plan_dft_c2r_3d(N, N, N, fbox, box, FFTW_ESTIMATE);
+    //
+    // /* Generate density grid */
+    // switchPerturbInterp(&ptdat, 4, 0);
+    // fft_apply_kernel(fbox, fbox, N, box_len, tet);
+    // fft_execute(c2r);
+    // fft_normalize_c2r(box, N, box_len);
+    //
+    // for (int i=0; i<m.q_size; i++) {
+    //     double q = m.q[i];
+    //     f0_eval = f0(q);
+    //     e1 = gridCIC(box, N, box_len, 1./64.*256., 14./64.*256, 60./64.*256.);
+    //     printf("%f\t %f\t %f\t %f\t %f\n", q, e1, 0., f0_eval*(1+e1), 0.);
+    // }
+    //
+    // fftw_destroy_plan(c2r);
+
     /* Release the interpolation splines */
-    bg_interp_free(&bg);
     cleanPerturbInterp(&ptdat);
 
     /* Clean up the remaining structures */
     cleanGrids(&grs);
     cleanMultipoles(&mmono);
     cleanMultipoles(&m);
-    cleanMultipoleInterp(&m);
+    cleanMultipoleInterp();
     cleanPerturb(&ptdat);
-    cleanBackgroundTitles(&bti);
-    cleanBackground(&bg);
     cleanParams(&pars);
 
     /* Free the GRF */

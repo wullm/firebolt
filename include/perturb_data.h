@@ -30,6 +30,7 @@ struct perturb_data {
   double *dydt; //time derivatives of delta
   double *k;
   double *log_tau;
+  double *redshift;
   char **titles;
 };
 

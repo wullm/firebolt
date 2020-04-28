@@ -105,6 +105,7 @@ int readPerturb(struct params *pars, struct units *us, struct perturb_data *pt) 
     /* Allocate memory */
     pt->k = calloc(pt->k_size, sizeof(double));
     pt->log_tau = calloc(pt->tau_size, sizeof(double));
+    pt->redshift = calloc(pt->tau_size, sizeof(double));
     pt->delta = malloc(pt->n_functions * pt->k_size * pt->tau_size * sizeof(double));
     // pt->dydt = malloc(pt->n_functions * pt->k_size * pt->tau_size * sizeof(double));
 
@@ -112,7 +113,7 @@ int readPerturb(struct params *pars, struct units *us, struct perturb_data *pt) 
     hid_t h_data;
 
     /* Allocation successful? */
-    if (pt->k == NULL || pt->log_tau == NULL || pt->delta == NULL) {
+    if (pt->k == NULL || pt->log_tau == NULL || pt->delta == NULL || pt->redshift == NULL) {
         printf("ERROR: unable to allocate memory for perturbation data.");
     }
 
@@ -124,6 +125,11 @@ int readPerturb(struct params *pars, struct units *us, struct perturb_data *pt) 
     /* Read the logs of conformal times */
     h_data = H5Dopen2(h_grp, "Log conformal times", H5P_DEFAULT);
     h_err = H5Dread(h_data, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, pt->log_tau);
+    H5Dclose(h_data);
+
+    /* Read the redshifts */
+    h_data = H5Dopen2(h_grp, "Redshifts", H5P_DEFAULT);
+    h_err = H5Dread(h_data, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, pt->redshift);
     H5Dclose(h_data);
 
     /* Read the transfer functions */
@@ -174,7 +180,7 @@ int readPerturb(struct params *pars, struct units *us, struct perturb_data *pt) 
         }
 
         /* If the function has dimension of 1/time, do the conversion */
-        if (dim_inv_time) {
+        if (dim_inv_time == 1) {
             for (int index_k=0; index_k<pt->k_size; index_k++) {
                 for (int index_tau=0; index_tau<pt->tau_size; index_tau++) {
                     int index = pt->tau_size * pt->k_size * i + pt->k_size * index_tau + index_k;
@@ -189,33 +195,10 @@ int readPerturb(struct params *pars, struct units *us, struct perturb_data *pt) 
     return 0;
 }
 
-/* Compute conformal time derivatives of all transfer functions */
-// int computeDerivs(struct perturb_data *pt) {
-//     for (int id_func = 0; id_func < pt->n_functions; id_func++) {
-//         for (int id_k = 0; id_k < pt->k_size; id_k++) {
-//
-//             /* Handle boundaries */
-//             int index_0 = pt->tau_size * pt->k_size * id_func + pt->k_size * 0 + id_k;
-//             pt->dydt[index_0] = 0.f;
-//             pt->dydt[index_0 + (pt->tau_size - 1) * pt->k_size] = 0.f;
-//
-//             for (int id_t = 1; id_t < pt->tau_size-1; id_t++) {
-//                 int index = pt->tau_size * pt->k_size * id_func + pt->k_size * id_t + id_k;
-//
-//                 double dt = exp(pt->log_tau[id_t]) - exp(pt->log_tau[id_t-1]);
-//                 double dy = pt->delta[index] - pt->delta[index - pt->k_size];
-//
-//                 pt->dydt[index] = dy/dt;
-//             }
-//         }
-//     }
-//
-//     return 0;
-// }
-
 int cleanPerturb(struct perturb_data *pt) {
     free(pt->k);
     free(pt->log_tau);
+    free(pt->redshift);
     free(pt->delta);
     // free(pt->dydt);
     for (int i=0; i<pt->n_functions; i++) {

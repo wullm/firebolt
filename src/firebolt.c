@@ -216,7 +216,7 @@ int main(int argc, char *argv[]) {
                 if (index_tau > 0) {
                     double logtau_prev = ptdat.log_tau[index_tau-1];
                     double tau_prev = exp(logtau_prev);
-                    evolve_gsl(&Psi, &ptdat, q, k, l_max, tau_prev, tau, M, dlnf0_dlnq, tol, bg_z_at_log_tau);
+                    evolve_gsl(&Psi, &ptdat, q, k, l_max, tau_prev, tau, M, dlnf0_dlnq, tol);
                 }
 
                 /* Do the momentum integral */

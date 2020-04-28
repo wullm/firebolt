@@ -22,6 +22,7 @@
 #include <hdf5.h>
 #include <math.h>
 #include <gsl/gsl_spline2d.h>
+#include <gsl/gsl_spline.h>
 
 #include "../include/perturb_interp.h"
 
@@ -29,8 +30,12 @@
 const gsl_interp2d_type *pt_interp_type;
 gsl_interp_accel *pt_k_acc;
 gsl_interp_accel *pt_tau_acc;
+/* We allocate two splines, which can be used concurrently */
 gsl_spline2d *pt_spline1;
 gsl_spline2d *pt_spline2;
+/* We also allocate a spline for redshift/time interpolation */
+const gsl_interp_type *pt_z_interp_type;
+gsl_spline *pt_z_spline;
 
 int initPerturbInterp(const struct perturb_data *pt) {
     /* We will use bilinear interpolation in (tau, k) space */
@@ -50,6 +55,15 @@ int initPerturbInterp(const struct perturb_data *pt) {
     /* Allocate memory for the accelerator objects */
     pt_k_acc = gsl_interp_accel_alloc();
     pt_tau_acc = gsl_interp_accel_alloc();
+
+    /* For the redshift spline, we use linear interpolation in tau space */
+    pt_z_interp_type = gsl_interp_linear;
+
+    /* Allocate memory for the 1d redshift spline */
+    pt_z_spline = gsl_spline_alloc(pt_z_interp_type, pt->tau_size);
+
+    /* Copy over the data */
+    gsl_spline_init(pt_z_spline, pt->log_tau, pt->redshift, pt->tau_size);
 
   return 0;
 }
@@ -79,6 +93,7 @@ int cleanPerturbInterp(const struct perturb_data *pt) {
     /* Done with the GSL interpolation */
     gsl_spline2d_free(pt_spline1);
     gsl_spline2d_free(pt_spline2);
+    gsl_spline_free(pt_z_spline);
     gsl_interp_accel_free(pt_k_acc);
     gsl_interp_accel_free(pt_tau_acc);
 
@@ -93,4 +108,8 @@ double perturbInterp(double k, double log_tau, int spline) {
     } else {
         return 1;
     }
+}
+
+double perturb_zAtLogTau(double log_tau) {
+    return gsl_spline_eval(pt_z_spline, log_tau, pt_tau_acc);
 }
