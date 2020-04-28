@@ -221,8 +221,9 @@ int main(int argc, char *argv[]) {
         double z = bg_z_at_log_tau(log_tau_fin);
         double a = 1./(1+z);
         double eps = hypot(q, a*M);
+        double c_vel = us.SpeedOfLight;
 
-        evolve_gsl(&Psi, &ptdat, q, k, l_max, tau_ini, tau_fin, M, dlnf0_dlnq, tol);
+        evolve_gsl(&Psi, &ptdat, q, k, l_max, tau_ini, tau_fin, M, c_vel, dlnf0_dlnq, tol);
 
         /* Do the momentum integrals */
         rho_delta_nu += q*q*eps*Psi[0]*f0_eval*dq;

@@ -211,12 +211,13 @@ int main(int argc, char *argv[]) {
                 double z = bg_z_at_log_tau(logtau);
                 double a = 1./(1+z);
                 double eps = hypot(q, a*M);
+                double c_vel = us.SpeedOfLight;
 
                 /* Integration only need after the first time step */
                 if (index_tau > 0) {
                     double logtau_prev = ptdat.log_tau[index_tau-1];
                     double tau_prev = exp(logtau_prev);
-                    evolve_gsl(&Psi, &ptdat, q, k, l_max, tau_prev, tau, M, dlnf0_dlnq, tol);
+                    evolve_gsl(&Psi, &ptdat, q, k, l_max, tau_prev, tau, M, c_vel, dlnf0_dlnq, tol);
                 }
 
                 /* Do the momentum integral */

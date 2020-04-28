@@ -46,13 +46,14 @@ int func(double tau, const double Psi[], double dPsi[], void *ode_pars) {
     double M = params[2]; //mass
     int l_max = (int) params[3]; //maximum multipole
     double dlnf0_dlnq = params[4]; //logarithmic derivative of distr. func.
+    double c_vel = params[5]; //speed of light
 
     /* Compute the necessary quantities */
     double logt = log(tau);
     double z = perturb_zAtLogTau(logt); //redshift
     double a = 1./(1+z); //scale factor
     double eps = hypot(q, a*M); //dimensionless energy
-    double qke = q*k/eps;
+    double qke = (q*k/eps) * c_vel;
 
     /* Interpolate the source functions at (k, log tau) */
     double h_prime = perturbInterp(k, logt, 0);
@@ -74,16 +75,17 @@ int func(double tau, const double Psi[], double dPsi[], void *ode_pars) {
 }
 
 int evolve_gsl(double **Psi, const struct perturb_data *ptdat,
-               double q, double k, int l_max, double tau_ini, double tau_final, double M,
-               double dlnf0_dlnq, double tolerance) {
+               double q, double k, int l_max, double tau_ini, double tau_final, double mass,
+               double c_vel, double dlnf0_dlnq, double tolerance) {
 
     /* Constants */
-    op.params = malloc(5 * sizeof(double));
+    op.params = malloc(6 * sizeof(double));
     op.params[0] = k;
     op.params[1] = q;
-    op.params[2] = M;
+    op.params[2] = mass;
     op.params[3] = l_max;
     op.params[4] = dlnf0_dlnq;
+    op.params[5] = c_vel;
 
     gsl_odeiv2_system sys = {func, NULL, l_max+1, &op};
     double t = tau_ini, t1 = tau_final;

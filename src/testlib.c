@@ -91,6 +91,8 @@ int main(int argc, char *argv[]) {
     readPerturb(&pars, &us, &ptdat);
     initPerturbInterp(&ptdat);
 
+    printf("\n\n");
+
     pars.GridSize = N;
     pars.BoxLen = box_len;
 
@@ -99,6 +101,9 @@ int main(int argc, char *argv[]) {
     double tau_ini = exp(ptdat.log_tau[0]);
     double tau_fin = pars.tauFinalSingle;
     double M = cosmo.M_nu * us.ElectronVolt / (cosmo.T_nu0 * us.kBoltzmann);
+    double c_vel = us.SpeedOfLight;
+
+    printf("Speed of light c = %f\n", c_vel);
 
     /* Size of the problem */
     int l_max = pars.MaxMultipole;
@@ -125,11 +130,11 @@ int main(int argc, char *argv[]) {
     initMultipoles(&m, k_size, q_steps, l_max, q_min, q_max, k_min, k_max);
 
     /* Also initialize the multipoles in monomial basis (with much lower l_max) */
-    int l_size = 12;
+    int l_size = 6;
     initMultipoles(&mmono, k_size, q_steps, l_size, q_min, q_max, k_min, k_max);
 
     /* Calculate the multipoles */
-    evolveMultipoles(&m, &ptdat, tau_ini, tau_fin, tol, M, pars.Verbose);
+    evolveMultipoles(&m, &ptdat, tau_ini, tau_fin, tol, M, c_vel, pars.Verbose);
 
     /* Also convert to monomial basis */
     convertMultipoleBasis_L2m(&m, &mmono, l_size-1);
@@ -149,10 +154,10 @@ int main(int argc, char *argv[]) {
         double q = m.q[i];
         f0_eval = f0(q);
         e1 = evalDensity(&grs, 58.921163, 2.016263, 3.615894, -0.964885, 0.261914, 0.019957, i);
-        e2 = e1 = evalDensity(&grs, 58.921163, 2.016263, 3.615894, 0.964885, 0.261914, 0.019957, i);
+        e2 = evalDensity(&grs, 58.921163, 2.016263, 3.615894, 0.964885, 0.261914, 0.019957, i);
         // e1 = evalDensity(&grs, 1./64.*256., 14./64.*256, 60./64.*256., 1., 0., 0., i);
         // e2 = evalDensity(&grs, 1./64.*256., 14./64.*256, 60./64.*256., -1., 0., 0., i);
-        printf("%f\t %f\t %f\t %f\t %f\n", q, e1, e2, f0_eval*(1+e1), f0_eval*(1+e2));
+        printf("%f %f %f %f %f\n", q, e1, e2, f0_eval*(1+e1), f0_eval*(1+e2));
     }
 
     // /* Create FFT plan */
