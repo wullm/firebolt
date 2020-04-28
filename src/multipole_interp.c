@@ -62,7 +62,7 @@ int switchMultipoleInterp(const struct multipoles *m, int l_index, int q_index) 
     return 0;
 }
 
-int cleanMultipoleInterp(const struct multipoles *m) {
+int cleanMultipoleInterp() {
     /* Done with the GSL interpolation */
     gsl_spline_free(mult_spline);
     gsl_interp_accel_free(mult_k_acc);

@@ -23,7 +23,7 @@
 #include "multipoles.h"
 
 int initMultipoleInterp(const struct multipoles *m);
-int cleanMultipoleInterp(const struct multipoles *m);
+int cleanMultipoleInterp(void);
 int switchMultipoleInterp(const struct multipoles *m, int l_index, int q_index);
 double multipoleInterp(double k);
 
