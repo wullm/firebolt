@@ -273,7 +273,7 @@ int main(int argc, char *argv[]) {
         double eps = hypot(q, a*M);
         double c_vel = us.SpeedOfLight;
 
-        evolve_gsl(&Psi, &ptdat, q, k, l_max, tau_ini, tau_fin, M, c_vel, dlnf0_dlnq, tol);
+        evolve_gsl(&Psi, q, k, l_max, tau_ini, tau_fin, M, c_vel, dlnf0_dlnq, tol);
 
         /* At the final time, compare with the expected CLASS results */
         // double eps_fin = hypot(q, a_fin*M);

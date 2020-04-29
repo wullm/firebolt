@@ -23,8 +23,8 @@
 #include "perturb_data.h"
 #include "background.h"
 
-int evolve_gsl(double **Psi, const struct perturb_data *ptdat,
-               double q, double k, int l_max, double tau_ini, double tau_final, double M,
-               double c_vel, double dlnf0_dlnq, double tolerance);
+int evolve_gsl(double **Psi, double q, double k, int l_max, double tau_ini,
+               double tau_final, double M, double c_vel, double dlnf0_dlnq,
+               double tolerance);
 
 #endif

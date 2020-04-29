@@ -136,7 +136,7 @@ int evolveMultipoles(struct multipoles *m, const struct perturb_data *ptdat,
                 Psi[l] = m->Psi[l * q_size * k_size + i * k_size + j];
             }
 
-            evolve_gsl(&Psi, ptdat, q, k, l_max, tau_ini, tau_fin, mass, c_vel, dlnf0_dlnq, tol);
+            evolve_gsl(&Psi, q, k, l_max, tau_ini, tau_fin, mass, c_vel, dlnf0_dlnq, tol);
 
             if (verbose) {
                 printf("%f %f %e %e %e %e %e\n", q, k, Psi[0], Psi[1], Psi[2], Psi[3], f0_eval);

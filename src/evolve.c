@@ -74,9 +74,9 @@ int func(double tau, const double Psi[], double dPsi[], void *ode_pars) {
     return GSL_SUCCESS;
 }
 
-int evolve_gsl(double **Psi, const struct perturb_data *ptdat,
-               double q, double k, int l_max, double tau_ini, double tau_final, double mass,
-               double c_vel, double dlnf0_dlnq, double tolerance) {
+int evolve_gsl(double **Psi, double q, double k, int l_max, double tau_ini,
+               double tau_final, double mass, double c_vel, double dlnf0_dlnq,
+               double tolerance) {
 
     /* Constants */
     op.params = malloc(6 * sizeof(double));
