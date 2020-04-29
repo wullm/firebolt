@@ -42,6 +42,7 @@ struct params {
 
     int MaxMultipole;
     int NumberMomentumBins;
+    double MinMomentum;
     double MaxMomentum;
     double InitialTime;
     double Tolerance;

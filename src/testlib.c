@@ -41,6 +41,53 @@ static inline void tet(struct kernel *the_kernel) {
     }
 }
 
+int writeGRF_H5(const double *box, int N, double boxlen, const char *fname) {
+    /* Create the hdf5 file */
+    hid_t h_file = H5Fcreate(fname, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+
+    /* Create the Header group */
+    hid_t h_grp = H5Gcreate(h_file, "/Header", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+    /* Create dataspace for BoxSize attribute */
+    const hsize_t arank = 1;
+    const hsize_t adims[1] = {3}; //3D space
+    hid_t h_aspace = H5Screate_simple(arank, adims, NULL);
+
+    /* Create the BoxSize attribute and write the data */
+    hid_t h_attr = H5Acreate1(h_grp, "BoxSize", H5T_NATIVE_DOUBLE, h_aspace, H5P_DEFAULT);
+    double boxsize[3] = {boxlen, boxlen, boxlen};
+    H5Awrite(h_attr, H5T_NATIVE_DOUBLE, boxsize);
+
+    /* Close the attribute, corresponding dataspace, and the Header group */
+    H5Aclose(h_attr);
+    H5Sclose(h_aspace);
+    H5Gclose(h_grp);
+
+    /* Create the Field group */
+    h_grp = H5Gcreate(h_file, "/Field", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+    /* Create dataspace for the field */
+    const hsize_t frank = 3;
+    const hsize_t fdims[3] = {N, N, N}; //3D space
+    hid_t h_fspace = H5Screate_simple(frank, fdims, NULL);
+
+    /* Create the dataset for the field */
+    hid_t h_data = H5Dcreate(h_grp, "Field", H5T_NATIVE_DOUBLE, h_fspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+    /* Write the data */
+    H5Dwrite(h_data, H5T_NATIVE_DOUBLE, h_fspace, h_fspace, H5P_DEFAULT, box);
+
+    /* Close the dataset, corresponding dataspace, and the Field group */
+    H5Dclose(h_data);
+    H5Sclose(h_fspace);
+    H5Gclose(h_grp);
+
+    /* Close the file */
+    H5Fclose(h_file);
+
+    return 0;
+}
+
 int main(int argc, char *argv[]) {
     printf("OK\n");
 
@@ -107,6 +154,7 @@ int main(int argc, char *argv[]) {
 
     /* Size of the problem */
     int l_max = pars.MaxMultipole;
+    double q_min = pars.MinMomentum;
     double q_max = pars.MaxMomentum;
     int q_steps = pars.NumberMomentumBins;
     double tol = pars.Tolerance;
@@ -119,11 +167,6 @@ int main(int argc, char *argv[]) {
     printf("\n");
 
     printf("The initial time is %f\n", exp(ptdat.log_tau[0]));
-
-    double q_min = 0.01;
-
-
-
 
     /* Initialize the multipoles */
     int k_size = 30;
@@ -138,6 +181,24 @@ int main(int argc, char *argv[]) {
 
     /* Also convert to monomial basis */
     convertMultipoleBasis_L2m(&m, &mmono, l_size-1);
+
+    /* For each momentum bin */
+    for (int i=0; i<q_steps; i++) {
+        double q = mmono.q[i];
+        /* For each wavenumber */
+        for (int j=0; j<k_size; j++) {
+            double k = mmono.k[j];
+
+            double Psi0 = mmono.Psi[0 * q_steps * k_size + i * k_size + j];
+            double Psi1 = mmono.Psi[1 * q_steps * k_size + i * k_size + j];
+            double Psi2 = mmono.Psi[2 * q_steps * k_size + i * k_size + j];
+            double Psi3 = mmono.Psi[3 * q_steps * k_size + i * k_size + j];
+
+            printf("%f %f %e %e %e %e\n", q, k, Psi0, Psi1, Psi2, Psi3);
+        }
+    }
+
+
 
     printf("Done with integrating. Processing the moments.\n");
 
@@ -177,6 +238,17 @@ int main(int argc, char *argv[]) {
     // }
     //
     // fftw_destroy_plan(c2r);
+
+    /* For each multipole/momentum bin pair, create the corresponding grid */
+    for (int index_q=0; index_q<q_steps; index_q++) {
+        for (int index_l=0; index_l<l_size; index_l++) {
+            char dbox_fname[DEFAULT_STRING_LENGTH];
+            sprintf(dbox_fname, "grid_l%d_q%d.hdf5", index_l, index_q);
+
+            double *destination = grs.grids + index_l * (N*N*N) * q_steps + index_q * (N*N*N);
+            writeGRF_H5(destination, N, box_len, dbox_fname);
+        }
+    }
 
     /* Release the interpolation splines */
     cleanPerturbInterp(&ptdat);

@@ -137,7 +137,7 @@ double evalDensity(const struct grids *grs, double x, double y, double z,
         }
 
         /* Add the derivative */
-        Psi += dl_Phi_l;
+        Psi = dl_Phi_l;
     }
 
     return Psi;

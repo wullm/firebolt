@@ -44,6 +44,7 @@ int readParams(struct params *pars, const char *fname) {
      ini_gets("Output", "Filename", "perturb_out.hdf5", pars->OutputFilename, len, fname);
 
      pars->MaxMultipole = ini_getl("Simulation", "MaxMultipole", 50, fname);
+     pars->MinMomentum = ini_getd("Simulation", "MinMomentum", 0.001, fname);
      pars->MaxMomentum = ini_getd("Simulation", "MaxMomentum", 15, fname);
      pars->NumberMomentumBins = ini_getl("Simulation", "NumberMomentumBins", 28, fname);
      pars->InitialTime = ini_getd("Simulation", "InitialTime", 0.05, fname);

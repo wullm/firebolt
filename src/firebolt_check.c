@@ -73,10 +73,10 @@ int main(int argc, char *argv[]) {
 
     /* Size of the problem */
     int l_max = pars.MaxMultipole;
+    double q_min = pars.MinMomentum;
     double q_max = pars.MaxMomentum;
     int q_steps = pars.NumberMomentumBins;
     double tol = pars.Tolerance;
-
 
     double chi = 0.;
     int steps = 1000;
@@ -110,7 +110,7 @@ int main(int argc, char *argv[]) {
     printf("c=%f\n", c);
 
 
-    exit(0);
+    // exit(0);
 
 
 
@@ -140,17 +140,17 @@ int main(int argc, char *argv[]) {
     // double z_fin = bg_z_at_log_tau(log_tau_fin);
     // double a_fin = 1./(1+z_fin);
 
-    switchPerturbInterp(&ptdat, 4, 0);
-    switchPerturbInterp(&ptdat, 5, 1);
+    switchPerturbInterp(&ptdat, 6, 0);
+    switchPerturbInterp(&ptdat, 7, 1);
     double class_delta_nu = perturbInterp(k, log_tau_fin, 0);
     double class_theta_nu = perturbInterp(k, log_tau_fin, 1);
     /* Also determine the shear and l3*/
-    switchPerturbInterp(&ptdat, 6, 0);
+    switchPerturbInterp(&ptdat, 8, 0);
     double class_shear_nu = perturbInterp(k, log_tau_fin, 0);
-    switchPerturbInterp(&ptdat, 8, 1);
+    switchPerturbInterp(&ptdat, 10, 1);
     double class_l3_nu = perturbInterp(k, log_tau_fin, 1);
     /* Also determine the sound speed cs2 */
-    switchPerturbInterp(&ptdat, 7, 1);
+    switchPerturbInterp(&ptdat, 9, 1);
     double class_cs2_nu = perturbInterp(k, log_tau_fin, 1);
 
 
@@ -202,8 +202,8 @@ int main(int argc, char *argv[]) {
         // theta_nu += theta_shift;
 
         /* Compare with CLASS results */
-        switchPerturbInterp(&ptdat, 4, 0);
-        switchPerturbInterp(&ptdat, 5, 1);
+        switchPerturbInterp(&ptdat, 6, 0);
+        switchPerturbInterp(&ptdat, 7, 1);
 
         double class_delta_nu = perturbInterp(k, log_tau, 0);
         double class_theta_nu = perturbInterp(k, log_tau, 1);
@@ -215,9 +215,9 @@ int main(int argc, char *argv[]) {
         // class_theta_nu -= theta_shift;
 
         /* Also determine the shear and l3 */
-        switchPerturbInterp(&ptdat, 6, 0); //shear
+        switchPerturbInterp(&ptdat, 8, 0); //shear
         double class_shear_nu = perturbInterp(k, log_tau, 0);
-        switchPerturbInterp(&ptdat, 8, 1); //l3
+        switchPerturbInterp(&ptdat, 10, 1); //l3
         double class_l3_nu = perturbInterp(k, log_tau, 1);
 
         ini_delta_nu = class_delta_nu;
@@ -243,11 +243,12 @@ int main(int argc, char *argv[]) {
 
     /* The neutrino multipoles */
     double *Psi = calloc(l_max+1,sizeof(double));
+    double dlogq = (log(q_max) - log(q_min)) / q_steps;
 
     /* For each momentum bin */
     for (int j=0; j<q_steps; j++) {
-        double dq = q_max/q_steps;
-        double q = (j+0.5) * dq;
+        double q = q_min * exp((j + 0.5) * dlogq);
+        double dq = dlogq * q;
 
         /* Derivative of the distribution function (5-point stencil) */
         double y = 0.0001;

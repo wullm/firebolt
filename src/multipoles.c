@@ -41,7 +41,17 @@ static inline unsigned long long binomial(unsigned long n, unsigned long k) {
     return c;
 }
 
-/* Generalized binomial coefficient, also valid for non-integer n */
+// /* Generalized binomial coefficient, also valid for non-integer n */
+// static inline double fbinomial(double n, double k) {
+//     double c = 1, i;
+//
+//     for (i = 0; i < k; i++) {
+//         c = c * (n-i) / (k-i);
+//     }
+//
+//     return c;
+// }
+
 static inline double fbinomial(double n, double k) {
     return exp(lgamma(n+1) - lgamma(k+1) - lgamma(n-k+1));
 }
@@ -139,7 +149,7 @@ int evolveMultipoles(struct multipoles *m, const struct perturb_data *ptdat,
             evolve_gsl(&Psi, q, k, l_max, tau_ini, tau_fin, mass, c_vel, dlnf0_dlnq, tol);
 
             if (verbose) {
-                printf("%f %f %e %e %e %e %e\n", q, k, Psi[0], Psi[1], Psi[2], Psi[3], f0_eval);
+                printf("%f %f %e %e %e %e %e %e %e %e\n", q, k, Psi[8], Psi[9], Psi[10], Psi[11], Psi[12], Psi[13], Psi[14], Psi[15]);
             }
 
             /* Store the result */
@@ -172,6 +182,16 @@ int convertMultipoleBasis_L2m(struct multipoles *mL, struct multipoles *mm, int 
     } else if (l_max_convert >= mm->l_size) {
         printf("Error: monomial struct is too small to convert maximum l term.\n");
         return 1;
+    }
+
+    /* Reset the monomial basis coefficients */
+    for (int l=0; l<=l_max_convert; l++) {
+        for (int i=0; i<q_size; i++) {
+            for (int j=0; j<k_size; j++) {
+                int qk_index =  i * k_size + j;
+                mm->Psi[l * qk_size + qk_index] = 0;
+            }
+        }
     }
 
     /* For each Legendre multipole up to order l_max_convert */
