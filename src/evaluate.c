@@ -53,9 +53,9 @@ double gridCIC(const double *box, int N, double boxlen, double x, double y, doub
     for (int i=lookLftX; i<=lookRgtX; i++) {
         for (int j=lookLftY; j<=lookRgtY; j++) {
             for (int k=lookLftZ; k<=lookRgtZ; k++) {
-                double xx = abs(X - (iX+i));
-                double yy = abs(Y - (iY+j));
-                double zz = abs(Z - (iZ+k));
+                double xx = fabs(X - (iX+i));
+                double yy = fabs(Y - (iY+j));
+                double zz = fabs(Z - (iZ+k));
 
                 double part_x = xx <= 1 ? 1-xx : 0;
                 double part_y = yy <= 1 ? 1-yy : 0;
@@ -137,7 +137,7 @@ double evalDensity(const struct grids *grs, double x, double y, double z,
         }
 
         /* Add the derivative */
-        Psi = dl_Phi_l;
+        Psi += dl_Phi_l;
     }
 
     return Psi;
