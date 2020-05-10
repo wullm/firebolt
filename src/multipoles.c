@@ -149,7 +149,13 @@ int evolveMultipoles(struct multipoles *m, const struct perturb_data *ptdat,
             evolve_gsl(&Psi, q, k, l_max, tau_ini, tau_fin, mass, c_vel, dlnf0_dlnq, tol);
 
             if (verbose) {
-                printf("%f %f %e %e %e %e %e %e %e %e\n", q, k, Psi[8], Psi[9], Psi[10], Psi[11], Psi[12], Psi[13], Psi[14], Psi[15]);
+                // printf("%f %f %e %e %e %e %e %e %e %e %e\n", q, k, Psi[7], Psi[8], Psi[9], Psi[10], Psi[11], Psi[12], Psi[13], Psi[14], Psi[15]);
+
+                printf("%f %f %e ", q, k, Psi[0]);
+                for (int l=1; l<8; l++) {
+                    printf("%e ", Psi[l]/Psi[l-1]);
+                }
+                printf("\n");
             }
 
             /* Store the result */
@@ -198,9 +204,9 @@ int convertMultipoleBasis_L2m(struct multipoles *mL, struct multipoles *mm, int 
     for (int n=0; n<=l_max_convert; n++) {
         /* Expand the Legendre polynomial in monomial basis */
         for (int l=0; l<=n; l++) {
-            double b1 = binomial(n, l);
+            double b1 = fbinomial(n, l);
             double b2 = fbinomial((n+l-1)/2., n);
-            double factor = pow(2,n) * b1 * b2 * (2*n + 1) * pow(-1, n);
+            double factor = pow(2,n) * b1 * b2 * (2*n + 1) * pow(-1., n);
 
             assert(l <= l_max_convert);
 

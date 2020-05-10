@@ -23,6 +23,9 @@
 #include "grids.h"
 
 double gridCIC(const double *box, int N, double boxlen, double x, double y, double z);
-double evalDensity(const struct grids *grs, double x, double y, double z,
-                   double nx, double ny, double nz, int index_q);
+double evalDensity(const struct grids *grs, const struct multipoles *m,
+                   double x, double y, double z, double qx, double qy,
+                   double qz);
+double evalDensityBin(const struct grids *grs, double x, double y, double z,
+                      double nx, double ny, double nz, int index_q);
 #endif

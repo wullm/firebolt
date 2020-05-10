@@ -32,7 +32,7 @@ const char *fname;
 
 static inline void tet(struct kernel *the_kernel) {
     double k = the_kernel->k;
-    double logt = log(12250.);
+    double logt = log(2000.);
 
     if (k == 0) {
         the_kernel->kern = 0.f;
@@ -173,7 +173,7 @@ int main(int argc, char *argv[]) {
     initMultipoles(&m, k_size, q_steps, l_max, q_min, q_max, k_min, k_max);
 
     /* Also initialize the multipoles in monomial basis (with much lower l_max) */
-    int l_size = 6;
+    int l_size = 10;
     initMultipoles(&mmono, k_size, q_steps, l_size, q_min, q_max, k_min, k_max);
 
     /* Calculate the multipoles */
@@ -198,6 +198,26 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    printf("\n\n");
+
+    /* For each momentum bin */
+    for (int i=0; i<q_steps; i++) {
+        double q = m.q[i];
+        int j = 5;
+        double k = m.k[j];
+
+        double Psi0 = m.Psi[0 * q_steps * k_size + i * k_size + j];
+        double Psi1 = m.Psi[1 * q_steps * k_size + i * k_size + j];
+        double Psi2 = m.Psi[2 * q_steps * k_size + i * k_size + j];
+        double Psi3 = m.Psi[3 * q_steps * k_size + i * k_size + j];
+        double Psi4 = m.Psi[4 * q_steps * k_size + i * k_size + j];
+        double Psi5 = m.Psi[5 * q_steps * k_size + i * k_size + j];
+        double Psi6 = m.Psi[6 * q_steps * k_size + i * k_size + j];
+
+        printf("%f %f %e %e %e %e %e %e %e\n", q, k, Psi0, Psi1, Psi2, Psi3, Psi4, Psi5, Psi6);
+    }
+
+
 
 
     printf("Done with integrating. Processing the moments.\n");
@@ -214,22 +234,37 @@ int main(int argc, char *argv[]) {
     for (int i=0; i<m.q_size; i++) {
         double q = m.q[i];
         f0_eval = f0(q);
-        e1 = evalDensity(&grs, 58.921163, 2.016263, 3.615894, -0.964885, 0.261914, 0.019957, i);
-        e2 = evalDensity(&grs, 58.921163, 2.016263, 3.615894, 0.964885, 0.261914, 0.019957, i);
+        e1 = evalDensityBin(&grs, 58.921163, 12.016263, 31.615894, 1, 0, 0, i);
+        e2 = evalDensityBin(&grs, 58.921163, 12.016263, 31.615894, 0, 1, 0, i);
         // e1 = evalDensity(&grs, 1./64.*256., 14./64.*256, 60./64.*256., 1., 0., 0., i);
         // e2 = evalDensity(&grs, 1./64.*256., 14./64.*256, 60./64.*256., -1., 0., 0., i);
         printf("%f %f %f %f %f\n", q, e1, e2, f0_eval*(1+e1), f0_eval*(1+e2));
     }
 
-    // /* Create FFT plan */
-    // fftw_plan c2r = fftw_plan_dft_c2r_3d(N, N, N, fbox, box, FFTW_ESTIMATE);
-    //
-    // /* Generate density grid */
-    // switchPerturbInterp(&ptdat, 4, 0);
-    // fft_apply_kernel(fbox, fbox, N, box_len, tet);
-    // fft_execute(c2r);
-    // fft_normalize_c2r(box, N, box_len);
-    //
+
+    /* Try evaluating in-between bins */
+    for (int i=0; i<m.q_size; i++) {
+        double q = i;
+        f0_eval = f0(q);
+        e1 = evalDensity(&grs, &m, 58.921163, 12.016263, 31.615894, q*1, 0, 0);
+        e2 = evalDensity(&grs, &m, 58.921163, 12.016263, 31.615894, 0, q*1, 0);
+        printf("%f %f %f %f %f\n", q, e1, e2, f0_eval*(1+e1), f0_eval*(1+e2));
+    }
+
+
+
+    /* Create FFT plan */
+    fftw_plan c2r = fftw_plan_dft_c2r_3d(N, N, N, fbox, box, FFTW_ESTIMATE);
+
+    /* Generate density grid */
+    switchPerturbInterp(&ptdat, 6, 0);
+    fft_apply_kernel(fbox, fbox, N, box_len, tet);
+    fft_execute(c2r);
+    fft_normalize_c2r(box, N, box_len);
+
+    char fff[50] = "density.hdf5";
+    writeGRF_H5(box, N, box_len, fff);
+
     // for (int i=0; i<m.q_size; i++) {
     //     double q = m.q[i];
     //     f0_eval = f0(q);

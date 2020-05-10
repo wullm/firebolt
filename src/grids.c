@@ -64,11 +64,8 @@ static inline void kernel_transfer_function(struct kernel *the_kernel) {
             /* Switch the interpolation spline to this transfer function */
             switchMultipoleInterp(m, index_l, index_q);
 
-            /* Copy the complex random field into the complex array */
-            memcpy(fbox, grf, N*N*(N/2+1)*sizeof(fftw_complex));
-
-            /* Apply the transfer function to fbox */
-            fft_apply_kernel(fbox, fbox, N, boxlen, kernel_transfer_function);
+            /* Apply the transfer function to grf and store in fbox */
+            fft_apply_kernel(fbox, grf, N, boxlen, kernel_transfer_function);
 
             // /* Compute the pre-factor = (2l+1) * (-1)^l */
             // double factor = (2*index_l + 1) * pow(-1, index_l);
