@@ -77,9 +77,9 @@ double gridCIC(const double *box, int N, double boxlen, double x, double y, doub
     return sum;
 }
 
-double evalDensity(const struct grids *grs, const struct multipoles *m,
-                   double x, double y, double z, double qx, double qy,
-                   double qz) {
+double evalDensity(const struct grids *grs, int q_size, double log_q_min,
+                   double log_q_max, double x, double y, double z,
+                   double qx, double qy, double qz) {
 
     /* Magnitude of the momentum vector */
     double q = hypot(qx, hypot(qy, qz));
@@ -90,23 +90,18 @@ double evalDensity(const struct grids *grs, const struct multipoles *m,
     double ny = qy/q;
     double nz = qz/q;
 
-    /* Compute the momentum bin */
-    double bin;
-    int q_size = m->q_size;
-
     /* Bins are logarithmically spaced */
     double log_q = log(q);
-    double log_q_min = log(m->q[0]);
-    double log_q_max = log(m->q[q_size-1]);
     double dlogq = (log_q_max - log_q_min) / q_size;
 
+    /* Compute the momentum bin */
+    double bin = (log_q - log_q_min) / dlogq - 0.5; // is fractional!
+
     /* Handle the boundaries */
-    if (log_q > log_q_max) {
+    if (bin > q_size-1) {
         bin = q_size-1;
-    } else if (log_q < log_q_min) {
+    } else if (bin < 0) {
         bin = 0;
-    } else {
-        bin = (log_q - log_q_min) / dlogq - 1; // is fractional!
     }
 
     /* If we have an integer bin, evaluate it */
@@ -116,7 +111,7 @@ double evalDensity(const struct grids *grs, const struct multipoles *m,
 
     /* Otherwise, interpolate between the closest bins */
     int bin_left = floor(bin);
-    double log_q_left = log(m->q[bin_left]);
+    double log_q_left = log_q_min + (bin_left + 0.5) * dlogq;
 
     /* Evaluate on both sides */
     double left = evalDensityBin(grs, x, y, z, nx, ny, nz, bin_left);
