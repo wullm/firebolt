@@ -158,41 +158,62 @@ int readPerturb(struct params *pars, struct units *us, struct perturb_data *pt) 
         pt->log_tau[i] += log(UnitTimeSeconds/us->UnitTimeSeconds);
     }
 
-    double unit_time_factor = UnitTimeSeconds/us->UnitTimeSeconds;
+    const double unit_length_factor = UnitLengthMetres / us->UnitLengthMetres;
+    const double unit_time_factor = UnitTimeSeconds / us->UnitTimeSeconds;
 
-    /* Perform unit conversions for velocity dispersion transfer functions,
-     * which have dimension inverse time, as opposed to most other transfer
-     * functions, which correspond to dimensionless quantities.
-     * Do the same for functions that are time derivatives.
-     */
+    /* Perform unit conversions for the transfer functions */
     for (int i=0; i<pt->n_functions; i++) {
-        char dim_inv_time = 0;
-        char *title_end = &pt->titles[i][strlen(pt->titles[i])];
+        /* Determine the unit conversion factor */
+        char *title = pt->titles[i];
+        double unit_factor = unitConversionFactor(title, unit_length_factor, unit_time_factor);
 
-        /* Velocity dispersion functions have titles starting with "t_" */
-        if (strncmp(pt->titles[i], "t_", 2) == 0) {
-            dim_inv_time = 1;
-        }
-
-        /* Time derivatives have titles ending in "_prime" */
-        else if (strncmp(title_end-6, "_prime", 6) == 0) {
-                dim_inv_time = 1;
-        }
-
-        /* If the function has dimension of 1/time, do the conversion */
-        if (dim_inv_time == 1) {
-            for (int index_k=0; index_k<pt->k_size; index_k++) {
-                for (int index_tau=0; index_tau<pt->tau_size; index_tau++) {
-                    int index = pt->tau_size * pt->k_size * i + pt->k_size * index_tau + index_k;
-                    pt->delta[index] /= unit_time_factor;
-                }
+        /* Convert from input units to internal units */
+        for (int index_k=0; index_k<pt->k_size; index_k++) {
+            for (int index_tau=0; index_tau<pt->tau_size; index_tau++) {
+                int index = pt->tau_size * pt->k_size * i + pt->k_size * index_tau + index_k;
+                pt->delta[index] *= unit_factor;
             }
         }
     }
 
-    /* The transfer functions (in the Eisenstein-Hu format) are dimensionless. */
-
     return 0;
+}
+
+/* Unit conversion factor for transfer functions, depending on the title. */
+double unitConversionFactor(char *title, double unit_length_factor,
+                            double unit_time_factor) {
+
+    /* Note the difference between strcmp and strncmp! */
+    char *title_end = &title[strlen(title)];
+
+    /* Most transfer functions are dimensionless, (e.g. overdensities) */
+    double factor = 1.0;
+
+    /* Energy flux transfer functions (theta = nabla.v) have dimension
+    * inverse time. These have titles starting with "t_". */
+    if (strncmp(title, "t_", 2) == 0) {
+        factor /= unit_time_factor;
+    }
+
+    /* Functions that are time derivatives have dimension inverse time */
+    if (strncmp(title_end-12, "_prime_prime", 12) == 0) {
+        factor /= pow(unit_time_factor, 2);
+    } else if (strncmp(title_end-6, "_prime", 6) == 0) {
+        factor /= unit_time_factor;
+    }
+
+    /* Potential transfer functions have dimensions of energy per mass or
+    * (Length/Time)^2. This applies to "phi", "psi", "h", "eta" and their
+    * derivatives (and possibly higher order derivatives).
+    */
+    if (strcmp(title, "h") == 0   || strncmp(title, "h_", 2) == 0 ||
+        strcmp(title, "phi") == 0 || strncmp(title, "phi_", 4) == 0 ||
+        strcmp(title, "eta") == 0 || strncmp(title, "eta_", 4) == 0 ||
+        strcmp(title, "psi") == 0 || strncmp(title, "psi_", 4) == 0) {
+            factor *= pow(unit_length_factor / unit_time_factor, 2);
+    }
+
+    return factor;
 }
 
 int cleanPerturb(struct perturb_data *pt) {
