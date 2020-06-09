@@ -234,8 +234,8 @@ int main(int argc, char *argv[]) {
     for (int i=0; i<m.q_size; i++) {
         double q = m.q[i];
         f0_eval = f0(q);
-        e1 = evalDensityBin(&grs, 58.921163, 12.016263, 31.615894, 1, 0, 0, i);
-        e2 = evalDensityBin(&grs, 58.921163, 12.016263, 31.615894, 0, 1, 0, i);
+        e1 = evalDensityBin(&grs, 58.921163, 12.016263, 31.615894, 1./sqrt(2), 1./sqrt(2), 0, i);
+        e2 = evalDensityBin(&grs, 58.921163, 12.016263, 31.615894, 0, 1./sqrt(2), -1./sqrt(2), i);
         // e1 = evalDensity(&grs, 1./64.*256., 14./64.*256, 60./64.*256., 1., 0., 0., i);
         // e2 = evalDensity(&grs, 1./64.*256., 14./64.*256, 60./64.*256., -1., 0., 0., i);
         printf("%f %f %f %f %f\n", q, e1, e2, f0_eval*(1+e1), f0_eval*(1+e2));
@@ -243,11 +243,11 @@ int main(int argc, char *argv[]) {
 
 
     /* Try evaluating in-between bins */
-    for (int i=0; i<m.q_size; i++) {
-        double q = i;
+    for (int i=0; i<10*m.q_size; i++) {
+        double q = ((double) i )/10;
         f0_eval = f0(q);
-        e1 = evalDensity(&grs, &m, 58.921163, 12.016263, 31.615894, q*1, 0, 0);
-        e2 = evalDensity(&grs, &m, 58.921163, 12.016263, 31.615894, 0, q*1, 0);
+        e1 = evalDensity(&grs, m.q_size, log(q_min), log(q_max), 58.921163, 12.016263, 31.615894, q*1./sqrt(2), q*1./sqrt(2), 0);
+        e2 = evalDensity(&grs, m.q_size, log(q_min), log(q_max), 58.921163, 12.016263, 31.615894, 0, q*1./sqrt(2), -q*1./sqrt(2));
         printf("%f %f %f %f %f\n", q, e1, e2, f0_eval*(1+e1), f0_eval*(1+e2));
     }
 
