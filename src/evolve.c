@@ -54,6 +54,7 @@ int func(double tau, const double Psi[], double dPsi[], void *ode_pars) {
     double a = 1./(1+z); //scale factor
     double eps = hypot(q, a*M); //dimensionless energy
     double qke = (q*k/eps) * c_vel;
+    double cc = c_vel * c_vel;
 
     /* Interpolate the source functions at (k, log tau) */
     double h_prime = perturbInterp(k, logt, 0);
@@ -63,9 +64,9 @@ int func(double tau, const double Psi[], double dPsi[], void *ode_pars) {
     double Psi_lmax_p1 = (2*l_max+1)/qke/tau * Psi[l_max] - Psi[l_max-1];
 
     /* Compute the derivatives */
-    dPsi[0] = - qke * Psi[1] + h_prime/6 * dlnf0_dlnq;
+    dPsi[0] = - qke * Psi[1] + h_prime/6 * dlnf0_dlnq / cc;
     dPsi[1] =   qke/3 * (Psi[0] - 2*Psi[2]);
-    dPsi[2] =   qke/5 * (2 * Psi[1] - 3 * Psi[3]) - (h_prime/15 + 2*eta_prime/5) * dlnf0_dlnq;
+    dPsi[2] =   qke/5 * (2 * Psi[1] - 3 * Psi[3]) - (h_prime/15 + 2*eta_prime/5) * dlnf0_dlnq / cc;
     for (int l=3; l<l_max; l++) {
         dPsi[l] = qke/(2*l+1.) * (l*Psi[l-1] - (l+1)*Psi[l+1]);
     }
