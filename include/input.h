@@ -41,6 +41,7 @@ struct params {
     char *PerturbFile;
 
     int MaxMultipole;
+    int MaxMultipoleConvert;
     int NumberMomentumBins;
     double MinMomentum;
     double MaxMomentum;
