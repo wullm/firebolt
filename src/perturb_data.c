@@ -161,11 +161,15 @@ int readPerturb(struct params *pars, struct units *us, struct perturb_data *pt) 
     const double unit_length_factor = UnitLengthMetres / us->UnitLengthMetres;
     const double unit_time_factor = UnitTimeSeconds / us->UnitTimeSeconds;
 
+    printf("Velocity factor = %e\n", 1./unit_time_factor);
+
     /* Perform unit conversions for the transfer functions */
     for (int i=0; i<pt->n_functions; i++) {
         /* Determine the unit conversion factor */
         char *title = pt->titles[i];
         double unit_factor = unitConversionFactor(title, unit_length_factor, unit_time_factor);
+
+        printf("Unit conversion factor for '%s' is %f\n", title, unit_factor);
 
         /* Convert from input units to internal units */
         for (int index_k=0; index_k<pt->k_size; index_k++) {
