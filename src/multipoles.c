@@ -25,6 +25,7 @@
 #include "../include/multipoles.h"
 #include "../include/evolve.h"
 #include "../include/ic.h"
+#include "../include/perturb_interp.h"
 
 
 /* Simple binomial coefficient function */
@@ -132,7 +133,7 @@ int evolveMultipoles(struct multipoles *m, const struct perturb_data *ptdat,
         /* Derivative of the distribution function (5-point stencil) */
         double y = 0.0001;
         double dlnf0_dlnq = compute_dlnf0_dlnq(q, y);
-        double f0_eval = f0(q);
+        // double f0_eval = f0(q);
 
         /* For each wavenumber */
         for (int j=0; j<k_size; j++) {
@@ -190,16 +191,6 @@ int convertMultipoleBasis_L2m(struct multipoles *mL, struct multipoles *mm, int 
         return 1;
     }
 
-    /* Reset the monomial basis coefficients */
-    for (int l=0; l<=l_max_convert; l++) {
-        for (int i=0; i<q_size; i++) {
-            for (int j=0; j<k_size; j++) {
-                int qk_index =  i * k_size + j;
-                mm->Psi[l * qk_size + qk_index] = 0;
-            }
-        }
-    }
-
     /* For each Legendre multipole up to order l_max_convert */
     for (int n=0; n<=l_max_convert; n++) {
         /* Expand the Legendre polynomial in monomial basis */
@@ -223,6 +214,89 @@ int convertMultipoleBasis_L2m(struct multipoles *mL, struct multipoles *mm, int 
 
     return 0;
 }
+
+/* Reset all the multipoles to zero */
+int resetMultipoles(struct multipoles *m) {
+    memset(m->Psi, 0, sizeof(double) * m->l_size * m->k_size * m->q_size);
+
+    return 0;
+}
+
+/* In Legendre basis, multipoles Psi_0 and Psi_1 are gauge-dependent and all
+ * higher multipoles are gauge-independent. Firebolt calculates the multipoles
+ * in synchronous gauge. Here, we convert to N-body gauge.
+ */
+ int convertMultipoleGauge_Nb(struct multipoles *mL,
+                              const struct perturb_data *ptdat,
+                              double log_tau, double a, double mass,
+                              double c_vel) {
+
+    int q_size = mL->q_size;
+    int k_size = mL->k_size;
+    int qk_size = q_size * k_size;
+
+    /* Find indices corresponding to gauge transformation transfer functions */
+    int delta_shift_index = -1, theta_shift_index = -1;
+    int h_prime_index = -1, eta_prime_index = -1;
+    for (int i=0; i<ptdat->n_functions; i++) {
+        if (strcmp(ptdat->titles[i], "t_cdm") == 0) {
+            theta_shift_index = i;
+            printf("Found '%s', index = %d\n", ptdat->titles[i], i);
+        } else if (strcmp(ptdat->titles[i], "delta_shift_Nb_m") == 0) {
+            delta_shift_index = i;
+            printf("Found '%s', index = %d\n", ptdat->titles[i], i);
+        } else if (strcmp(ptdat->titles[i], "h_prime") == 0) {
+            h_prime_index = i;
+            printf("Found '%s', index = %d\n", ptdat->titles[i], i);
+        } else if (strcmp(ptdat->titles[i], "eta_prime") == 0) {
+            eta_prime_index = i;
+            printf("Found '%s', index = %d\n", ptdat->titles[i], i);
+        }
+    }
+
+    if (delta_shift_index == -1 || theta_shift_index == -1) {
+        printf("Error: missing transfer functions needed for N-body gauge transformation.\n");
+        return 1;
+    } else if (h_prime_index == -1 || eta_prime_index == -1) {
+        printf("Error: missing transfer functions needed for multipole evolution.\n");
+        return 1;
+    }
+
+    /* Select the transfer function needed for gauge transformation */
+    switchPerturbInterp(ptdat, delta_shift_index, 0);
+    switchPerturbInterp(ptdat, theta_shift_index, 1);
+
+    /* For each momentum bin */
+    for (int i=0; i<q_size; i++) {
+        double q = mL->q[i];
+        /* For each wavenumber */
+        for (int j=0; j<k_size; j++) {
+            double k = mL->k[j];
+
+            double y = 0.0001;
+            double dlnf0_dlnq = compute_dlnf0_dlnq(q, y);
+
+            double delta_shift = perturbInterp(k, log_tau, 0);
+            double theta_shift = perturbInterp(k, log_tau, 1);
+
+            /* Technically, we need to multiply delta_shift by (1+w), but it is
+             * already negligible, so it makes no difference, since 0<w<1. */
+
+            double eps = hypot(q, a*mass); //dimensionless energy
+
+            /* Only Psi_0 and Psi_1 are gauge-dependent */
+            mL->Psi[0 * qk_size + i * k_size + j] -= 0.25 * delta_shift * dlnf0_dlnq;
+            mL->Psi[1 * qk_size + i * k_size + j] -= eps/(3*q*k)/c_vel * theta_shift * dlnf0_dlnq;
+        }
+    }
+
+    /* Switch back to h' and eta' mode */
+    switchPerturbInterp(ptdat, h_prime_index, 0);
+    switchPerturbInterp(ptdat, eta_prime_index, 1);
+
+    return 0;
+}
+
 
 int cleanMultipoles(struct multipoles *m) {
     free(m->k);
