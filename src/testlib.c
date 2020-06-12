@@ -32,12 +32,13 @@ const char *fname;
 
 static inline void tet(struct kernel *the_kernel) {
     double k = the_kernel->k;
-    double logt = log(2000.);
+    double logt = log(7.07);
 
     if (k == 0) {
         the_kernel->kern = 0.f;
     } else {
         the_kernel->kern = perturbInterp(k, logt, 0);
+        // the_kernel->kern = - _Complex_I * the_kernel->kz * perturbInterp(k, logt, 0)/k/k;
     }
 }
 
@@ -138,6 +139,26 @@ int main(int argc, char *argv[]) {
     readPerturb(&pars, &us, &ptdat);
     initPerturbInterp(&ptdat);
 
+    /* Find indices corresponding to specific functions */
+    int h_prime_index = 0, eta_prime_index = 0;
+    int H_T_Nb_prime_index = 0;
+    for (int i=0; i<ptdat.n_functions; i++) {
+        if (strcmp(ptdat.titles[i], "h_prime") == 0) {
+            h_prime_index = i;
+            printf("Found '%s', index = %d\n", ptdat.titles[i], i);
+        } else if (strcmp(ptdat.titles[i], "eta_prime") == 0) {
+            eta_prime_index = i;
+            printf("Found '%s', index = %d\n", ptdat.titles[i], i);
+        } else if (strcmp(ptdat.titles[i], "H_T_Nb_prime") == 0) {
+            H_T_Nb_prime_index = i;
+            printf("Found '%s', index = %d\n", ptdat.titles[i], i);
+        }
+    }
+
+    /* Make sure that the interpolation functions correspond to h' and eta' */
+    switchPerturbInterp(&ptdat, h_prime_index, 0);
+    switchPerturbInterp(&ptdat, eta_prime_index, 1);
+
     printf("\n\n");
 
     pars.GridSize = N;
@@ -151,9 +172,11 @@ int main(int argc, char *argv[]) {
     double c_vel = us.SpeedOfLight;
 
     printf("Speed of light c = %f\n", c_vel);
+    printf("Mass neutrino M = %f (%f)\n", M, cosmo.M_nu);
 
     /* Size of the problem */
     int l_max = pars.MaxMultipole;
+    int l_max_convert = pars.MaxMultipoleConvert;
     double q_min = pars.MinMomentum;
     double q_max = pars.MaxMomentum;
     int q_steps = pars.NumberMomentumBins;
@@ -164,6 +187,7 @@ int main(int argc, char *argv[]) {
     printf("[tau_ini, z_ini] = [%f, %.2e]\n", tau_ini, perturb_zAtLogTau(log(tau_ini)));
     printf("[tau_fin, z_fin] = [%f, %.2e]\n", tau_fin, perturb_zAtLogTau(log(tau_fin)));
     printf("[l_max, q_steps, q_max, tol] = [%d, %d, %.1f, %.3e]\n", l_max, q_steps, q_max, tol);
+    printf("[l_max_convert] = %d\n", l_max_convert);
     printf("\n");
 
     printf("The initial time is %f\n", exp(ptdat.log_tau[0]));
@@ -173,14 +197,24 @@ int main(int argc, char *argv[]) {
     initMultipoles(&m, k_size, q_steps, l_max, q_min, q_max, k_min, k_max);
 
     /* Also initialize the multipoles in monomial basis (with much lower l_max) */
-    int l_size = 10;
-    initMultipoles(&mmono, k_size, q_steps, l_size, q_min, q_max, k_min, k_max);
+    initMultipoles(&mmono, k_size, q_steps, l_max_convert+1, q_min, q_max, k_min, k_max);
 
     /* Calculate the multipoles */
     evolveMultipoles(&m, &ptdat, tau_ini, tau_fin, tol, M, c_vel, pars.Verbose);
 
+    /* Scale factor at final time */
+    double z_fin = perturb_zAtLogTau(log(tau_fin));
+    double a = 1./(1+z_fin);
+
+    /* N-body gauge transformation */
+    convertMultipoleGauge_Nb(&m, &ptdat, log(tau_fin), a, M, c_vel);
+
+    /* Switch back to h' and eta' mode */
+    switchPerturbInterp(&ptdat, h_prime_index, 0);
+    switchPerturbInterp(&ptdat, eta_prime_index, 1);
+
     /* Also convert to monomial basis */
-    convertMultipoleBasis_L2m(&m, &mmono, l_size-1);
+    convertMultipoleBasis_L2m(&m, &mmono, l_max_convert);
 
     /* For each momentum bin */
     for (int i=0; i<q_steps; i++) {
@@ -225,33 +259,49 @@ int main(int argc, char *argv[]) {
     /* Initialize the multipole interpolation splines */
     initMultipoleInterp(&mmono);
 
+
+    printf("Interpolation initialized.\n");
+
     /* Generate grids with the monomial multipoles */
     initGrids(&pars, &mmono, &grs);
     generateGrids(&pars, &us, &mmono, fbox, &grs);
+
+    double eval_x = 46;
+    double eval_y = 26;
+    double eval_z = 14;
+    double eval_nx1 = 0;
+    double eval_ny1 = 0;
+    double eval_nz1 = 1;
+    double eval_nx2 = 0;
+    double eval_ny2 = 0;
+    double eval_nz2 = -1;
 
     /* Try evaluating */
     double e1,e2,f0_eval;
     for (int i=0; i<m.q_size; i++) {
         double q = m.q[i];
         f0_eval = f0(q);
-        e1 = evalDensityBin(&grs, 58.921163, 12.016263, 31.615894, 1./sqrt(2), 1./sqrt(2), 0, i);
-        e2 = evalDensityBin(&grs, 58.921163, 12.016263, 31.615894, 0, 1./sqrt(2), -1./sqrt(2), i);
+        e1 = evalDensityBin(&grs, eval_x, eval_y, eval_z, eval_nx1, eval_ny1, eval_nz1, i);
+        e2 = evalDensityBin(&grs, eval_x, eval_y, eval_z, eval_nx2, eval_ny2, eval_nz2, i);
         // e1 = evalDensity(&grs, 1./64.*256., 14./64.*256, 60./64.*256., 1., 0., 0., i);
         // e2 = evalDensity(&grs, 1./64.*256., 14./64.*256, 60./64.*256., -1., 0., 0., i);
-        printf("%f %f %f %f %f\n", q, e1, e2, f0_eval*(1+e1), f0_eval*(1+e2));
+        printf("%f %e %e %f %f\n", q, e1, e2, f0_eval*(1+e1), f0_eval*(1+e2));
     }
 
+
+    printf("Stage two.\n");
 
     /* Try evaluating in-between bins */
     for (int i=0; i<10*m.q_size; i++) {
         double q = ((double) i )/10;
         f0_eval = f0(q);
-        e1 = evalDensity(&grs, m.q_size, log(q_min), log(q_max), 58.921163, 12.016263, 31.615894, q*1./sqrt(2), q*1./sqrt(2), 0);
-        e2 = evalDensity(&grs, m.q_size, log(q_min), log(q_max), 58.921163, 12.016263, 31.615894, 0, q*1./sqrt(2), -q*1./sqrt(2));
-        printf("%f %f %f %f %f\n", q, e1, e2, f0_eval*(1+e1), f0_eval*(1+e2));
+        e1 = evalDensity(&grs, m.q_size, log(q_min), log(q_max), eval_x, eval_y, eval_z, q*eval_nx1, q*eval_ny1, q*eval_nz1);
+        e2 = evalDensity(&grs, m.q_size, log(q_min), log(q_max), eval_x, eval_y, eval_z, q*eval_nx2, q*eval_ny2, q*eval_nz2);
+        printf("%f %e %e %f %f\n", q, e1, e2, f0_eval*(1+e1), f0_eval*(1+e2));
     }
 
 
+    printf("Stage three.\n");
 
     /* Create FFT plan */
     fftw_plan c2r = fftw_plan_dft_c2r_3d(N, N, N, fbox, box, FFTW_ESTIMATE);
@@ -259,24 +309,26 @@ int main(int argc, char *argv[]) {
     /* Generate density grid */
     switchPerturbInterp(&ptdat, 6, 0);
     fft_apply_kernel(fbox, fbox, N, box_len, tet);
+    printf("Stage four.\n");
     fft_execute(c2r);
     fft_normalize_c2r(box, N, box_len);
+
 
     char fff[50] = "density.hdf5";
     writeGRF_H5(box, N, box_len, fff);
 
-    // for (int i=0; i<m.q_size; i++) {
-    //     double q = m.q[i];
-    //     f0_eval = f0(q);
-    //     e1 = gridCIC(box, N, box_len, 1./64.*256., 14./64.*256, 60./64.*256.);
-    //     printf("%f\t %f\t %f\t %f\t %f\n", q, e1, 0., f0_eval*(1+e1), 0.);
-    // }
-    //
-    // fftw_destroy_plan(c2r);
+    for (int i=0; i<m.q_size; i++) {
+        double q = m.q[i];
+        f0_eval = f0(q);
+        e1 = gridCIC(box, N, box_len, eval_x, eval_y, eval_z);
+        printf("%f\t %e\t %f\t %f\t %f\n", q, e1, 0., f0_eval*(1+e1), 0.);
+    }
+
+    fftw_destroy_plan(c2r);
 
     /* For each multipole/momentum bin pair, create the corresponding grid */
     for (int index_q=0; index_q<q_steps; index_q++) {
-        for (int index_l=0; index_l<l_size; index_l++) {
+        for (int index_l=0; index_l<l_max_convert+1; index_l++) {
             char dbox_fname[DEFAULT_STRING_LENGTH];
             sprintf(dbox_fname, "grid_l%d_q%d.hdf5", index_l, index_q);
 
