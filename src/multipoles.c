@@ -241,16 +241,12 @@ int resetMultipoles(struct multipoles *m) {
     for (int i=0; i<ptdat->n_functions; i++) {
         if (strcmp(ptdat->titles[i], "t_cdm") == 0) {
             theta_shift_index = i;
-            printf("Found '%s', index = %d\n", ptdat->titles[i], i);
         } else if (strcmp(ptdat->titles[i], "delta_shift_Nb_m") == 0) {
             delta_shift_index = i;
-            printf("Found '%s', index = %d\n", ptdat->titles[i], i);
         } else if (strcmp(ptdat->titles[i], "h_prime") == 0) {
             h_prime_index = i;
-            printf("Found '%s', index = %d\n", ptdat->titles[i], i);
         } else if (strcmp(ptdat->titles[i], "eta_prime") == 0) {
             eta_prime_index = i;
-            printf("Found '%s', index = %d\n", ptdat->titles[i], i);
         }
     }
 
