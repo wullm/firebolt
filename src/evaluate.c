@@ -79,16 +79,10 @@ double gridCIC(const double *box, int N, double boxlen, double x, double y, doub
 
 double evalDensity(const struct grids *grs, int q_size, double log_q_min,
                    double log_q_max, double x, double y, double z,
-                   double qx, double qy, double qz) {
+                   double nx, double ny, double nz, double q) {
 
-    /* Magnitude of the momentum vector */
-    double q = hypot(qx, hypot(qy, qz));
+    /* Impossible */
     if (q == 0) return 0;
-
-    /* Unit momentum vector */
-    double nx = qx/q;
-    double ny = qy/q;
-    double nz = qz/q;
 
     /* Bins are logarithmically spaced */
     double log_q = log(q);
@@ -127,8 +121,8 @@ double evalDensityBin(const struct grids *grs, double x, double y, double z,
                       double nx, double ny, double nz, int index_q) {
 
     /* For the lth term, we need to take the lth order derivative of Phi_l.
-     * We do this using central difference stencils. The accuracies are:
-     * O(h^4) for f'(x) and f''(x) and all others are O(h^2). */
+     * We do this using central difference stencils. The accuracies are O(h^2).
+     */
 
     /* Check that we have all the stencils we need */
     if (grs->l_size > 12) {
@@ -137,11 +131,11 @@ double evalDensityBin(const struct grids *grs, double x, double y, double z,
     }
 
     /* Derivative stencil widths */
-    const int dw[12] = {1,5,5,5,5,7,7,9,9,11,11,13};
+    const int dw[12] = {1,3,3,5,5,7,7,9,9,11,11,13};
     /* Derivative stencil coefficients for f(x), f'(x), f''(x), etc. */
     const double d0[1] = {1.}; //exact, no derivative
-    const double d1[5] = {0.08333333, -0.66666667, 0., 0.66666667, -0.08333333};
-    const double d2[5] = {-0.08333333, 1.33333333, -2.5, 1.33333333, -0.08333333};
+    const double d1[3] = {-0.5, 0., 0.5};
+    const double d2[3] = {1., -2., 1.};
     const double d3[5] = {-0.5,  1. ,  0. , -1. ,  0.5};
     const double d4[5] = {1., -4.,  6., -4.,  1.};
     const double d5[7] = {-0.5, 2, -2.5, 0, 2.5, -2, 0.5};
@@ -286,4 +280,40 @@ double evalDensityBin(const struct grids *grs, double x, double y, double z,
     // printf("\n");
 
     return Psi;
+}
+
+double evalDensityBinSimple(const struct grids *grs, double x, double y, double z,
+                            double nx, double ny, double nz, int index_q) {
+
+    /* For the lth term, we need to take the lth order derivative of Phi_l. */
+
+    /* Grid dimensions */
+    const int N = grs->N;
+    const double boxlen = grs->boxlen;
+    const int q_size = grs->q_size;
+    const double h = boxlen/N;
+
+    if (index_q > q_size) {
+        printf("Error: exceeding maximum momentum bin.\n");
+        return 0;
+    }
+
+    /* Compute the total perturbation */
+    const double *Phi_0_grid = grs->grids + 0 * q_size * (N*N*N) + index_q * (N*N*N);
+    const double *Phi_1_grid = grs->grids + 1 * q_size * (N*N*N) + index_q * (N*N*N);
+
+    /* Zeroth order contribution */
+    const double d0_Phi_0 = gridCIC(Phi_0_grid, N, boxlen, x, y, z);
+
+    /* First order contribution */
+    const double dx_Phi_1 = gridCIC(Phi_1_grid, N, boxlen, x+h, y, z)
+                          - gridCIC(Phi_1_grid, N, boxlen, x-h, y, z);
+    const double dy_Phi_1 = gridCIC(Phi_1_grid, N, boxlen, x, y+h, z)
+                          - gridCIC(Phi_1_grid, N, boxlen, x, y-h, z);
+    const double dz_Phi_1 = gridCIC(Phi_1_grid, N, boxlen, x, y, z+h)
+                          - gridCIC(Phi_1_grid, N, boxlen, x, y, z-h);
+
+    const double d1_Phi_1 = (nx*dx_Phi_1 + ny*dy_Phi_1 + nz*dz_Phi_1) / (2*h);
+
+    return d0_Phi_0 + d1_Phi_1;
 }

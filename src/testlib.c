@@ -37,8 +37,8 @@ static inline void tet(struct kernel *the_kernel) {
     if (k == 0) {
         the_kernel->kern = 0.f;
     } else {
-        the_kernel->kern = perturbInterp(k, logt, 0);
-        // the_kernel->kern = - _Complex_I * the_kernel->kz * perturbInterp(k, logt, 0)/k/k;
+        // the_kernel->kern = perturbInterp(k, logt, 0);
+        the_kernel->kern = - _Complex_I * the_kernel->kz * perturbInterp(k, logt, 0)/k/k;
     }
 }
 
@@ -266,15 +266,15 @@ int main(int argc, char *argv[]) {
     initGrids(&pars, &mmono, &grs);
     generateGrids(&pars, &us, &mmono, fbox, &grs);
 
-    double eval_x = 46;
+    double eval_x = 16;
     double eval_y = 26;
     double eval_z = 14;
     double eval_nx1 = 0;
-    double eval_ny1 = 0;
-    double eval_nz1 = 1;
+    double eval_ny1 = 1;
+    double eval_nz1 = 0;
     double eval_nx2 = 0;
-    double eval_ny2 = 0;
-    double eval_nz2 = -1;
+    double eval_ny2 = -1;
+    double eval_nz2 = 0;
 
     /* Try evaluating */
     double e1,e2,f0_eval;
@@ -293,10 +293,10 @@ int main(int argc, char *argv[]) {
 
     /* Try evaluating in-between bins */
     for (int i=0; i<10*m.q_size; i++) {
-        double q = ((double) i )/10;
+        double q = ((double) i )/10 * q_max/m.q_size;
         f0_eval = f0(q);
-        e1 = evalDensity(&grs, m.q_size, log(q_min), log(q_max), eval_x, eval_y, eval_z, q*eval_nx1, q*eval_ny1, q*eval_nz1);
-        e2 = evalDensity(&grs, m.q_size, log(q_min), log(q_max), eval_x, eval_y, eval_z, q*eval_nx2, q*eval_ny2, q*eval_nz2);
+        e1 = evalDensity(&grs, m.q_size, log(q_min), log(q_max), eval_x, eval_y, eval_z, eval_nx1, eval_ny1, eval_nz1, q);
+        e2 = evalDensity(&grs, m.q_size, log(q_min), log(q_max), eval_x, eval_y, eval_z, eval_nx2, eval_ny2, eval_nz2, q);
         printf("%f %e %e %f %f\n", q, e1, e2, f0_eval*(1+e1), f0_eval*(1+e2));
     }
 
@@ -307,7 +307,7 @@ int main(int argc, char *argv[]) {
     fftw_plan c2r = fftw_plan_dft_c2r_3d(N, N, N, fbox, box, FFTW_ESTIMATE);
 
     /* Generate density grid */
-    switchPerturbInterp(&ptdat, 6, 0);
+    switchPerturbInterp(&ptdat, 7, 0);
     fft_apply_kernel(fbox, fbox, N, box_len, tet);
     printf("Stage four.\n");
     fft_execute(c2r);
