@@ -25,9 +25,13 @@
 double gridCIC(const double *box, int N, double boxlen, double x, double y, double z);
 double evalDensity(const struct grids *grs, int q_size, double log_q_min,
                    double log_q_max, double x, double y, double z,
-                   double nx, double ny, double nz, double q);
+                   double nx, double ny, double nz, double q, int mode);
 double evalDensityBin(const struct grids *grs, double x, double y, double z,
                       double nx, double ny, double nz, int index_q);
 double evalDensityBinSimple(const struct grids *grs, double x, double y, double z,
+                            double nx, double ny, double nz, int index_q);
+double evalDensityBinZero(const struct grids *grs, double x, double y, double z,
+                            double nx, double ny, double nz, int index_q);
+double evalDensityBinOne(const struct grids *grs, double x, double y, double z,
                             double nx, double ny, double nz, int index_q);
 #endif

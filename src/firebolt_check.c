@@ -112,7 +112,35 @@ int main(int argc, char *argv[]) {
 
     // exit(0);
 
+    /* Find indices corresponding to specific functions */
+    int h_prime_index = 0, eta_prime_index = 0;
+    int d_ncdm_index = 0, t_ncdm_index = 0 , shear_ncdm_index = 0,
+        l3_ncdm_index = 0, cs2_ncdm_index = 0;
 
+    for (int i=0; i<ptdat.n_functions; i++) {
+        if (strcmp(ptdat.titles[i], "h_prime") == 0) {
+            h_prime_index = i;
+            printf("Found 'h_prime', index = %d\n", h_prime_index);
+        } else if (strcmp(ptdat.titles[i], "eta_prime") == 0) {
+            eta_prime_index = i;
+            printf("Found 'eta_prime', index = %d\n", eta_prime_index);
+        } else if (strcmp(ptdat.titles[i], "d_ncdm[0]") == 0) {
+            d_ncdm_index = i;
+            printf("Found 'd_ncdm[0]', index = %d\n", d_ncdm_index);
+        } else if (strcmp(ptdat.titles[i], "t_ncdm[0]") == 0) {
+            t_ncdm_index = i;
+            printf("Found 't_ncdm[0]', index = %d\n", t_ncdm_index);
+        } else if (strcmp(ptdat.titles[i], "shear_ncdm[0]") == 0) {
+            shear_ncdm_index = i;
+            printf("Found 'shear_ncdm[0]', index = %d\n", shear_ncdm_index);
+        } else if (strcmp(ptdat.titles[i], "l3_ncdm[0]") == 0) {
+            l3_ncdm_index = i;
+            printf("Found 'l3_ncdm[0]', index = %d\n", l3_ncdm_index);
+        } else if (strcmp(ptdat.titles[i], "cs2_ncdm[0]") == 0) {
+            cs2_ncdm_index = i;
+            printf("Found 'cs2_ncdm[0]', index = %d\n", cs2_ncdm_index);
+        }
+    }
 
 
 
@@ -140,17 +168,17 @@ int main(int argc, char *argv[]) {
     // double z_fin = bg_z_at_log_tau(log_tau_fin);
     // double a_fin = 1./(1+z_fin);
 
-    switchPerturbInterp(&ptdat, 6, 0);
-    switchPerturbInterp(&ptdat, 7, 1);
+    switchPerturbInterp(&ptdat, d_ncdm_index, 0);
+    switchPerturbInterp(&ptdat, t_ncdm_index, 1);
     double class_delta_nu = perturbInterp(k, log_tau_fin, 0);
     double class_theta_nu = perturbInterp(k, log_tau_fin, 1);
     /* Also determine the shear and l3*/
-    switchPerturbInterp(&ptdat, 8, 0);
+    switchPerturbInterp(&ptdat, shear_ncdm_index, 0);
     double class_shear_nu = perturbInterp(k, log_tau_fin, 0);
-    switchPerturbInterp(&ptdat, 10, 1);
+    switchPerturbInterp(&ptdat, l3_ncdm_index, 1);
     double class_l3_nu = perturbInterp(k, log_tau_fin, 1);
     /* Also determine the sound speed cs2 */
-    switchPerturbInterp(&ptdat, 9, 1);
+    switchPerturbInterp(&ptdat, cs2_ncdm_index, 1);
     double class_cs2_nu = perturbInterp(k, log_tau_fin, 1);
 
 
@@ -202,11 +230,13 @@ int main(int argc, char *argv[]) {
         // theta_nu += theta_shift;
 
         /* Compare with CLASS results */
-        switchPerturbInterp(&ptdat, 6, 0);
-        switchPerturbInterp(&ptdat, 7, 1);
+        switchPerturbInterp(&ptdat, d_ncdm_index, 0);
+        switchPerturbInterp(&ptdat, t_ncdm_index, 1);
 
         double class_delta_nu = perturbInterp(k, log_tau, 0);
         double class_theta_nu = perturbInterp(k, log_tau, 1);
+
+        printf("class_delta = %e, class_theta = %e\n", class_delta_nu, class_theta_nu);
 
         /* Little h correction for theta's */
         // class_theta_nu *= cosmo.h * cosmo.h;
@@ -215,9 +245,9 @@ int main(int argc, char *argv[]) {
         // class_theta_nu -= theta_shift;
 
         /* Also determine the shear and l3 */
-        switchPerturbInterp(&ptdat, 8, 0); //shear
+        switchPerturbInterp(&ptdat, shear_ncdm_index, 0); //shear
         double class_shear_nu = perturbInterp(k, log_tau, 0);
-        switchPerturbInterp(&ptdat, 10, 1); //l3
+        switchPerturbInterp(&ptdat, l3_ncdm_index, 1); //l3
         double class_l3_nu = perturbInterp(k, log_tau, 1);
 
         ini_delta_nu = class_delta_nu;
@@ -227,8 +257,8 @@ int main(int argc, char *argv[]) {
     }
 
     /* Switch back to h' and eta' */
-    switchPerturbInterp(&ptdat, 0, 0); // h'
-    switchPerturbInterp(&ptdat, 1, 1); // eta'
+    switchPerturbInterp(&ptdat, h_prime_index, 0); // h'
+    switchPerturbInterp(&ptdat, eta_prime_index, 1); // eta'
 
     printf("Initial conditions done.\n");
 
@@ -310,7 +340,10 @@ int main(int argc, char *argv[]) {
     double w_nu = p_nu/rho_nu; //equation of state
 
     printf("\n");
-    printf("w = %f\n",w_nu);
+    printf("w = %f\n", w_nu);
+    printf("rho_nu = %f\n", rho_nu);
+    printf("rho_delta_nu = %f\n", rho_delta_nu);
+    printf("factor = %e\n", factor_ncdm);
     printf("\n");
 
     /* Determine a'/a = H * a */
@@ -358,7 +391,7 @@ int main(int argc, char *argv[]) {
 
     printf("All done!.\n");
 
-    switchPerturbInterp(&ptdat, 6, 0);
+    switchPerturbInterp(&ptdat, d_ncdm_index, 0);
     printf("\n\n %e %e\n", perturbInterp(k, ptdat.log_tau[0], 1), perturbInterp(k, log_tau_fin, 1));
     printf("%e %e\n", ini_shear_nu, class_shear_nu);
 

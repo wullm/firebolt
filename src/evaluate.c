@@ -79,7 +79,7 @@ double gridCIC(const double *box, int N, double boxlen, double x, double y, doub
 
 double evalDensity(const struct grids *grs, int q_size, double log_q_min,
                    double log_q_max, double x, double y, double z,
-                   double nx, double ny, double nz, double q) {
+                   double nx, double ny, double nz, double q, int mode) {
 
     /* Impossible */
     if (q == 0) return 0;
@@ -108,8 +108,17 @@ double evalDensity(const struct grids *grs, int q_size, double log_q_min,
     double log_q_left = log_q_min + (bin_left + 0.5) * dlogq;
 
     /* Evaluate on both sides */
-    double left = evalDensityBin(grs, x, y, z, nx, ny, nz, bin_left);
-    double right = evalDensityBin(grs, x, y, z, nx, ny, nz, bin_left + 1);
+    double left, right;
+    if (mode == 0) {
+        left = evalDensityBinZero(grs, x, y, z, nx, ny, nz, bin_left);
+        right = evalDensityBinZero(grs, x, y, z, nx, ny, nz, bin_left + 1);
+    } else if (mode == 1) {
+        left = evalDensityBinOne(grs, x, y, z, nx, ny, nz, bin_left);
+        right = evalDensityBinOne(grs, x, y, z, nx, ny, nz, bin_left + 1);
+    } else {
+        left = evalDensityBin(grs, x, y, z, nx, ny, nz, bin_left);
+        right = evalDensityBin(grs, x, y, z, nx, ny, nz, bin_left + 1);
+    }
 
     /* Interpolate and return */
     double w = (log_q - log_q_left) / dlogq;
@@ -316,4 +325,61 @@ double evalDensityBinSimple(const struct grids *grs, double x, double y, double 
     const double d1_Phi_1 = (nx*dx_Phi_1 + ny*dy_Phi_1 + nz*dz_Phi_1) / (2*h);
 
     return d0_Phi_0 + d1_Phi_1;
+}
+
+double evalDensityBinZero(const struct grids *grs, double x, double y, double z,
+                            double nx, double ny, double nz, int index_q) {
+
+    /* For the lth term, we need to take the lth order derivative of Phi_l. */
+
+    /* Grid dimensions */
+    const int N = grs->N;
+    const double boxlen = grs->boxlen;
+    const int q_size = grs->q_size;
+    const double h = boxlen/N;
+
+    if (index_q > q_size) {
+        printf("Error: exceeding maximum momentum bin.\n");
+        return 0;
+    }
+
+    /* Compute the total perturbation */
+    const double *Phi_0_grid = grs->grids + 0 * q_size * (N*N*N) + index_q * (N*N*N);
+
+    /* Zeroth order contribution */
+    const double d0_Phi_0 = gridCIC(Phi_0_grid, N, boxlen, x, y, z);
+
+    return d0_Phi_0;
+}
+
+double evalDensityBinOne(const struct grids *grs, double x, double y, double z,
+                            double nx, double ny, double nz, int index_q) {
+
+    /* For the lth term, we need to take the lth order derivative of Phi_l. */
+
+    /* Grid dimensions */
+    const int N = grs->N;
+    const double boxlen = grs->boxlen;
+    const int q_size = grs->q_size;
+    const double h = boxlen/N;
+
+    if (index_q > q_size) {
+        printf("Error: exceeding maximum momentum bin.\n");
+        return 0;
+    }
+
+    /* Compute the total perturbation */
+    const double *Phi_1_grid = grs->grids + 1 * q_size * (N*N*N) + index_q * (N*N*N);
+
+    /* First order contribution */
+    const double dx_Phi_1 = gridCIC(Phi_1_grid, N, boxlen, x+h, y, z)
+                          - gridCIC(Phi_1_grid, N, boxlen, x-h, y, z);
+    const double dy_Phi_1 = gridCIC(Phi_1_grid, N, boxlen, x, y+h, z)
+                          - gridCIC(Phi_1_grid, N, boxlen, x, y-h, z);
+    const double dz_Phi_1 = gridCIC(Phi_1_grid, N, boxlen, x, y, z+h)
+                          - gridCIC(Phi_1_grid, N, boxlen, x, y, z-h);
+
+    const double d1_Phi_1 = (nx*dx_Phi_1 + ny*dy_Phi_1 + nz*dz_Phi_1) / (2*h);
+
+    return d1_Phi_1;
 }

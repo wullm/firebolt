@@ -79,25 +79,47 @@ int main(int argc, char *argv[]) {
         double k = ptdat.k[i];
 
         /* Retrieve delta and theta results */
-        switchPerturbInterp(&ptdat, 4, 0);
-        switchPerturbInterp(&ptdat, 5, 1);
+        switchPerturbInterp(&ptdat, 14, 0);
+        switchPerturbInterp(&ptdat, 15, 1);
 
-        double delta_nu = perturbInterp(k, log_tau_fin, 0);
-        double theta_nu = perturbInterp(k, log_tau_fin, 1);
+        double a = perturbInterp(k, log_tau_fin, 0);
+        double b = perturbInterp(k, log_tau_fin, 1);
 
-        /* Also determine the shear and l3*/
+
         switchPerturbInterp(&ptdat, 6, 0);
-        double shear_nu = perturbInterp(k, log_tau_fin, 0);
-        switchPerturbInterp(&ptdat, 8, 1);
-        double l3_nu = perturbInterp(k, log_tau_fin, 1);
+        switchPerturbInterp(&ptdat, 11, 1);
 
-        /* Also determine the sound speed cs2 */
-        switchPerturbInterp(&ptdat, 7, 1);
-        double cs2_nu = perturbInterp(k, log_tau_fin, 1);
 
-        printf("%f %e %e %e %e %e\n", k, delta_nu, theta_nu, shear_nu, l3_nu, cs2_nu);
+        double c = perturbInterp(k, log_tau_fin, 0);
+        double d = perturbInterp(k, log_tau_fin, 1);
+
+        printf("%f %e %e %e %e\n", k, a, b, c, d);
 
     }
+
+    // for (int i=0; i<ptdat.k_size; i++) {
+    //     double k = ptdat.k[i];
+    //
+    //     /* Retrieve delta and theta results */
+    //     switchPerturbInterp(&ptdat, 4, 0);
+    //     switchPerturbInterp(&ptdat, 5, 1);
+    //
+    //     double delta_nu = perturbInterp(k, log_tau_fin, 0);
+    //     double theta_nu = perturbInterp(k, log_tau_fin, 1);
+    //
+    //     /* Also determine the shear and l3*/
+    //     switchPerturbInterp(&ptdat, 6, 0);
+    //     double shear_nu = perturbInterp(k, log_tau_fin, 0);
+    //     switchPerturbInterp(&ptdat, 8, 1);
+    //     double l3_nu = perturbInterp(k, log_tau_fin, 1);
+    //
+    //     /* Also determine the sound speed cs2 */
+    //     switchPerturbInterp(&ptdat, 7, 1);
+    //     double cs2_nu = perturbInterp(k, log_tau_fin, 1);
+    //
+    //     printf("%f %e %e %e %e %e\n", k, delta_nu, theta_nu, shear_nu, l3_nu, cs2_nu);
+    //
+    // }
 
 
     /* Release the interpolation splines */

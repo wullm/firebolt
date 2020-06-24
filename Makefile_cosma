@@ -31,7 +31,7 @@ all:
 	$(GCC) src/background.c -c -o lib/background.o $(INCLUDES) $(CFLAGS)
 	$(GCC) src/background_interp.c -c -o lib/background_interp.o $(INCLUDES) $(CFLAGS)
 	$(GCC) src/perturb_data.c -c -o lib/perturb_data.o $(INCLUDES) $(CFLAGS)
-	$(GCC) src/perturb_interp.c -c -o lib/perturb_interp.o $(INCLUDES) $(CFLAGS)
+	$(GCC) src/perturb_interp.c -c -o lib/perturb_interp.o $(INCLUDES) $(CFLAGS) $(LIBRARIES)
 	$(GCC) src/ic.c -c -o lib/ic.o $(INCLUDES) $(CFLAGS)
 	$(GCC) src/evolve.c -c -o lib/evolve.o $(INCLUDES) $(CFLAGS)
 

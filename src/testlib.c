@@ -30,6 +30,16 @@
 
 const char *fname;
 
+static inline double sampleNorm() {
+    double u = (double) rand()/RAND_MAX;
+    double v = (double) rand()/RAND_MAX;
+
+    double z0 = sqrt(-2 * log(u)) * cos(2 * M_PI * v);
+    //double z1 = sqrt(-2 * log(u)) * sin(2 * M_PI * v);
+
+    return z0;
+}
+
 static inline void tet(struct kernel *the_kernel) {
     double k = the_kernel->k;
     double logt = log(7.07);
@@ -295,13 +305,46 @@ int main(int argc, char *argv[]) {
     for (int i=0; i<10*m.q_size; i++) {
         double q = ((double) i )/10 * q_max/m.q_size;
         f0_eval = f0(q);
-        e1 = evalDensity(&grs, m.q_size, log(q_min), log(q_max), eval_x, eval_y, eval_z, eval_nx1, eval_ny1, eval_nz1, q);
-        e2 = evalDensity(&grs, m.q_size, log(q_min), log(q_max), eval_x, eval_y, eval_z, eval_nx2, eval_ny2, eval_nz2, q);
+        e1 = evalDensity(&grs, m.q_size, log(q_min), log(q_max), eval_x, eval_y, eval_z, eval_nx1, eval_ny1, eval_nz1, q, 2);
+        e2 = evalDensity(&grs, m.q_size, log(q_min), log(q_max), eval_x, eval_y, eval_z, eval_nx2, eval_ny2, eval_nz2, q, 2);
         printf("%f %e %e %f %f\n", q, e1, e2, f0_eval*(1+e1), f0_eval*(1+e2));
     }
 
 
     printf("Stage three.\n");
+
+
+    /* Sample random points in phase space */
+    for (int i=0; i<10000; i++) {
+        double x = box_len * (double) rand() / RAND_MAX;
+        double y = box_len * (double) rand() / RAND_MAX;
+        double z = box_len * (double) rand() / RAND_MAX;
+
+        /* Generate random point on the sphere */
+        double nx = sampleNorm();
+        double ny = sampleNorm();
+        double nz = sampleNorm();
+        double len = sqrt(nx*nx + ny*ny + nz*nz);
+
+        nx /= len;
+        ny /= len;
+        nz /= len;
+
+        double q = 10. * (double) rand() / RAND_MAX; //should be FD
+
+        int bin = 1;
+
+        double f0_eval = f0(q);
+        double Psi0 = evalDensityBinZero(&grs, x, y, z, nx, ny, nz, bin);
+        double Psi1 = evalDensityBinSimple(&grs, x, y, z, nx, ny, nz, bin);
+
+
+        // evalDensity(&grs, m.q_size, log(q_min), log(q_max), x, y, z, nx, ny, nz, q);
+
+        printf("%f %f %f\n", f0_eval, Psi0, Psi1);
+    }
+
+    printf("Bliep bloep.\n");
 
     /* Create FFT plan */
     fftw_plan c2r = fftw_plan_dft_c2r_3d(N, N, N, fbox, box, FFTW_ESTIMATE);
