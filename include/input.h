@@ -43,6 +43,7 @@ struct params {
     int MaxMultipole;
     int MaxMultipoleConvert;
     int NumberMomentumBins;
+    int NumberWavenumbers;
     double MinMomentum;
     double MaxMomentum;
     double InitialTime;
