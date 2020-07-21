@@ -25,7 +25,6 @@
 
 #include "../include/grids.h"
 #include "../include/fft.h"
-#include "../include/output.h"
 #include "../include/multipole_interp.h"
 
 static inline void kernel_transfer_function(struct kernel *the_kernel) {
@@ -41,14 +40,13 @@ static inline void kernel_transfer_function(struct kernel *the_kernel) {
 /* Generate a density grid for each particle type by applying the power
  * spectrum to the random phases. The necessary transfer functions are in trs.
  */
- int generateGrids(const struct params *pars, const struct units *us,
-                   const struct multipoles *m,
-                   const fftw_complex *grf,
-                   struct grids *grs) {
+int generateGrids(const struct multipoles *m,
+                  const fftw_complex *grf,
+                  struct grids *grs) {
 
     /* Grid dimensions */
-    const int N = pars->GridSize;
-    const double boxlen = pars->BoxLen;
+    const int N = grs->N;
+    const double boxlen = grs->boxlen;
 
     /* Create complex and real 3D arrays */
     fftw_complex *fbox = (fftw_complex*) fftw_malloc(N*N*(N/2+1)*sizeof(fftw_complex));
@@ -102,12 +100,11 @@ static inline void kernel_transfer_function(struct kernel *the_kernel) {
     return 0;
 }
 
-int initGrids(const struct params *pars, const struct multipoles *m,
-              struct grids *grs) {
+int initGrids(int N, double boxlen, const struct multipoles *m, struct grids *grs) {
 
     /* Grid dimensions */
-    grs->N = pars->GridSize;
-    grs->boxlen = pars->BoxLen;
+    grs->N = N;
+    grs->boxlen = boxlen;
     int totalGridSize = (grs->N) * (grs->N) * (grs->N);
 
     /* Number of grids */

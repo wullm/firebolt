@@ -21,7 +21,6 @@
 #define GRIDS_H
 
 #include <fftw3.h>
-#include "input.h"
 #include "multipoles.h"
 
 struct grids {
@@ -32,12 +31,10 @@ struct grids {
   double *grids; //all the grids are stored in sequence
 };
 
-int initGrids(const struct params *pars, const struct multipoles *m,
-              struct grids *grs);
+int initGrids(int N, double boxlen, const struct multipoles *m, struct grids *grs);
 int cleanGrids(struct grids *grs);
 
-int generateGrids(const struct params *pars, const struct units *us,
-                  const struct multipoles *m,
+int generateGrids(const struct multipoles *m,
                   const fftw_complex *grf,
                   struct grids *grs);
 

@@ -24,14 +24,17 @@
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_odeiv2.h>
 #include <gsl/gsl_matrix.h>
-#include "../include/ic.h"
-#include "../include/background_interp.h"
-#include "../include/perturb_interp.h"
 #include "../include/evolve.h"
 
 struct ode_pars {
     /* Array of parameters of the diferential equation */
     double *params;
+    /* Reference to function that gives redshift z(log_tau) */
+    double (*redshift_func)(double log_tau);
+    /* Reference to function that gives h'(k, log_tau) */
+    double (*h_prime_func)(double k, double log_tau);
+    /* Reference to function that gives eta'(k, log_tau) */
+    double (*eta_prime_func)(double k, double log_tau);
 };
 
 struct ode_pars op;
@@ -50,15 +53,16 @@ int func(double tau, const double Psi[], double dPsi[], void *ode_pars) {
 
     /* Compute the necessary quantities */
     double logt = log(tau);
-    double z = perturb_zAtLogTau(logt); //redshift
+    // double z = perturb_zAtLogTau(logt); //redshift
+    double z = ops->redshift_func(logt); //redshift
     double a = 1./(1+z); //scale factor
     double eps = hypot(q, a*M); //dimensionless energy
     double qke = (q*k/eps) * c_vel;
     double cc = c_vel * c_vel;
 
     /* Interpolate the source functions at (k, log tau) */
-    double h_prime = perturbInterp(k, logt, 0);
-    double eta_prime = perturbInterp(k, logt, 1);
+    double h_prime = ops->h_prime_func(k, logt);
+    double eta_prime = ops->eta_prime_func(k, logt);
 
     /* Set the final Psi, using the truncation prescription of Ma & Bertschinger */
     double Psi_lmax_p1 = (2*l_max+1)/qke/tau * Psi[l_max] - Psi[l_max-1];
@@ -77,6 +81,9 @@ int func(double tau, const double Psi[], double dPsi[], void *ode_pars) {
 
 int evolve_gsl(double **Psi, double q, double k, int l_max, double tau_ini,
                double tau_final, double mass, double c_vel, double dlnf0_dlnq,
+               double (*redshift_func)(double log_tau),
+               double (*h_prime_func)(double k, double log_tau),
+               double (*eta_prime_func)(double k, double log_tau),
                double tolerance) {
 
     /* Constants */
@@ -87,6 +94,9 @@ int evolve_gsl(double **Psi, double q, double k, int l_max, double tau_ini,
     op.params[3] = l_max;
     op.params[4] = dlnf0_dlnq;
     op.params[5] = c_vel;
+    op.redshift_func = redshift_func;
+    op.h_prime_func = h_prime_func;
+    op.eta_prime_func = eta_prime_func;
 
     gsl_odeiv2_system sys = {func, NULL, l_max+1, &op};
     double t = tau_ini, t1 = tau_final;

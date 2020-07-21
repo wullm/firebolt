@@ -20,16 +20,13 @@
 #ifndef FIREBOLT_MIN_H
 #define FIREBOLT_MIN_H
 
+/* Some extra functions */
 #include "input.h"
 #include "output.h"
 #include "perturb_data.h"
 #include "perturb_interp.h"
-#include "evolve.h"
 
-#include "fft.h"
-#include "multipoles.h"
-#include "multipole_interp.h"
-#include "grids.h"
-#include "evaluate.h"
+/* The bare minimum */
+#include "firebolt_nano.h"
 
 #endif

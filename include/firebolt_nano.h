@@ -17,14 +17,14 @@
  *
  ******************************************************************************/
 
-#ifndef FB_EVOLVE_H
-#define FB_EVOLVE_H
+#ifndef FIREBOLT_NANO_H
+#define FIREBOLT_NANO_H
 
-int evolve_gsl(double **Psi, double q, double k, int l_max, double tau_ini,
-               double tau_final, double mass, double c_vel, double dlnf0_dlnq,
-               double (*redshift_func)(double log_tau),
-               double (*h_prime_func)(double k, double log_tau),
-               double (*eta_prime_func)(double k, double log_tau),
-               double tolerance);
+#include "evolve.h"
+#include "multipoles.h"
+#include "multipole_interp.h"
+#include "fft.h"
+#include "grids.h"
+#include "evaluate.h"
 
 #endif

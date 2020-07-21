@@ -25,7 +25,6 @@
 #include "../include/multipoles.h"
 #include "../include/evolve.h"
 #include "../include/ic.h"
-#include "../include/perturb_interp.h"
 
 
 /* Simple binomial coefficient function */
@@ -118,9 +117,12 @@ int initMultipoles(struct multipoles *m, int k_size, int q_size, int l_size,
     return 0;
 }
 
-int evolveMultipoles(struct multipoles *m, const struct perturb_data *ptdat,
-                     double tau_ini, double tau_fin, double tol, double mass,
-                     double c_vel, short verbose) {
+int evolveMultipoles(struct multipoles *m, double tau_ini, double tau_fin,
+                     double tol, double mass, double c_vel,
+                     double (*redshift_func)(double log_tau),
+                     double (*h_prime_func)(double k, double log_tau),
+                     double (*eta_prime_func)(double k, double log_tau),
+                     short verbose) {
 
     int l_max = m->l_size-1;
     int q_size = m->q_size;
@@ -147,7 +149,9 @@ int evolveMultipoles(struct multipoles *m, const struct perturb_data *ptdat,
                 Psi[l] = m->Psi[l * q_size * k_size + i * k_size + j];
             }
 
-            evolve_gsl(&Psi, q, k, l_max, tau_ini, tau_fin, mass, c_vel, dlnf0_dlnq, tol);
+            evolve_gsl(&Psi, q, k, l_max, tau_ini, tau_fin, mass, c_vel,
+                       dlnf0_dlnq, redshift_func, h_prime_func, eta_prime_func,
+                       tol);
 
             if (verbose) {
                 // printf("%f %f %e %e %e %e %e %e %e %e %e\n", q, k, Psi[7], Psi[8], Psi[9], Psi[10], Psi[11], Psi[12], Psi[13], Psi[14], Psi[15]);
@@ -227,40 +231,14 @@ int resetMultipoles(struct multipoles *m) {
  * in synchronous gauge. Here, we convert to N-body gauge.
  */
  int convertMultipoleGauge_Nb(struct multipoles *mL,
-                              const struct perturb_data *ptdat,
                               double log_tau, double a, double mass,
-                              double c_vel) {
+                              double c_vel,
+                              double (*delta_shift_func)(double k, double log_tau),
+                              double (*theta_shift_func)(double k, double log_tau)) {
 
     int q_size = mL->q_size;
     int k_size = mL->k_size;
     int qk_size = q_size * k_size;
-
-    /* Find indices corresponding to gauge transformation transfer functions */
-    int delta_shift_index = -1, theta_shift_index = -1;
-    int h_prime_index = -1, eta_prime_index = -1;
-    for (int i=0; i<ptdat->n_functions; i++) {
-        if (strcmp(ptdat->titles[i], "t_cdm") == 0) {
-            theta_shift_index = i;
-        } else if (strcmp(ptdat->titles[i], "delta_shift_Nb_m") == 0) {
-            delta_shift_index = i;
-        } else if (strcmp(ptdat->titles[i], "h_prime") == 0) {
-            h_prime_index = i;
-        } else if (strcmp(ptdat->titles[i], "eta_prime") == 0) {
-            eta_prime_index = i;
-        }
-    }
-
-    if (delta_shift_index == -1 || theta_shift_index == -1) {
-        printf("Error: missing transfer functions needed for N-body gauge transformation.\n");
-        return 1;
-    } else if (h_prime_index == -1 || eta_prime_index == -1) {
-        printf("Error: missing transfer functions needed for multipole evolution.\n");
-        return 1;
-    }
-
-    /* Select the transfer function needed for gauge transformation */
-    switchPerturbInterp(ptdat, delta_shift_index, 0);
-    switchPerturbInterp(ptdat, theta_shift_index, 1);
 
     /* For each momentum bin */
     for (int i=0; i<q_size; i++) {
@@ -272,8 +250,8 @@ int resetMultipoles(struct multipoles *m) {
             double y = 0.0001;
             double dlnf0_dlnq = compute_dlnf0_dlnq(q, y);
 
-            double delta_shift = perturbInterp(k, log_tau, 0);
-            double theta_shift = perturbInterp(k, log_tau, 1);
+            double delta_shift = delta_shift_func(k, log_tau);
+            double theta_shift = theta_shift_func(k, log_tau);
 
             /* Technically, we need to multiply delta_shift by (1+w), but it is
              * already negligible, so it makes no difference, since 0<w<1. */
@@ -285,10 +263,6 @@ int resetMultipoles(struct multipoles *m) {
             mL->Psi[1 * qk_size + i * k_size + j] -= eps/(3*q*k)/c_vel * theta_shift * dlnf0_dlnq;
         }
     }
-
-    /* Switch back to h' and eta' mode */
-    switchPerturbInterp(ptdat, h_prime_index, 0);
-    switchPerturbInterp(ptdat, eta_prime_index, 1);
 
     return 0;
 }

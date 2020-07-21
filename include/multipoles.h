@@ -20,9 +20,6 @@
 #ifndef MULTIPOLES_H
 #define MULTIPOLES_H
 
-#include "input.h"
-#include "perturb_data.h"
-
 struct multipoles {
   int k_size;
   int q_size;
@@ -40,14 +37,18 @@ double compute_dlnf0_dlnq(double q, double h);
 /* Multipole functions */
 int initMultipoles(struct multipoles *m, int k_size, int q_size, int l_size,
                    double q_min, double q_max, double k_min, double k_max);
-int evolveMultipoles(struct multipoles *m, const struct perturb_data *ptdat,
-                     double tau_ini, double tau_fin, double tol, double mass,
-                     double c_vel, short verbose);
+int evolveMultipoles(struct multipoles *m, double tau_ini, double tau_fin,
+                     double tol, double mass, double c_vel,
+                     double (*redshift_func)(double log_tau),
+                     double (*h_prime_func)(double k, double log_tau),
+                     double (*eta_prime_func)(double k, double log_tau),
+                     short verbose);
 int convertMultipoleBasis_L2m(struct multipoles *mL, struct multipoles *mm, int l_max);
 int convertMultipoleGauge_Nb(struct multipoles *mL,
-                             const struct perturb_data *ptdat,
                              double log_tau, double a, double mass,
-                             double c_vel);
+                             double c_vel,
+                             double (*delta_shift_func)(double k, double log_tau),
+                             double (*theta_shift_func)(double k, double log_tau));
 int resetMultipoles(struct multipoles *m);
 int cleanMultipoles(struct multipoles *m);
 

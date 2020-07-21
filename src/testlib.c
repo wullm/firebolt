@@ -26,7 +26,13 @@
 #include <complex.h>
 #include <fftw3.h>
 
-#include "../include/firebolt_min.h"
+// #include "../include/firebolt_min.h"
+
+#include "../include/firebolt_nano.h"
+#include "../include/input.h"
+#include "../include/output.h"
+#include "../include/perturb_data.h"
+#include "../include/perturb_interp.h"
 
 const char *fname;
 
@@ -99,6 +105,13 @@ int writeGRF_H5(const double *box, int N, double boxlen, const char *fname) {
     return 0;
 }
 
+static inline double first_perturb_index(double k, double log_tau) {
+    return perturbInterp(k, log_tau, 0);
+}
+static inline double second_perturb_index(double k, double log_tau) {
+    return perturbInterp(k, log_tau, 1);
+}
+
 int main(int argc, char *argv[]) {
     printf("OK\n");
 
@@ -151,7 +164,7 @@ int main(int argc, char *argv[]) {
 
     /* Find indices corresponding to specific functions */
     int h_prime_index = 0, eta_prime_index = 0;
-    int H_T_Nb_prime_index = 0;
+    int delta_shift_index = -1, theta_shift_index = -1;
     for (int i=0; i<ptdat.n_functions; i++) {
         if (strcmp(ptdat.titles[i], "h_prime") == 0) {
             h_prime_index = i;
@@ -159,8 +172,11 @@ int main(int argc, char *argv[]) {
         } else if (strcmp(ptdat.titles[i], "eta_prime") == 0) {
             eta_prime_index = i;
             printf("Found '%s', index = %d\n", ptdat.titles[i], i);
-        } else if (strcmp(ptdat.titles[i], "H_T_Nb_prime") == 0) {
-            H_T_Nb_prime_index = i;
+        } else if (strcmp(ptdat.titles[i], "t_cdm") == 0) {
+            theta_shift_index = i;
+            printf("Found '%s', index = %d\n", ptdat.titles[i], i);
+        } else if (strcmp(ptdat.titles[i], "delta_shift_Nb_m") == 0) {
+            delta_shift_index = i;
             printf("Found '%s', index = %d\n", ptdat.titles[i], i);
         }
     }
@@ -210,14 +226,18 @@ int main(int argc, char *argv[]) {
     initMultipoles(&mmono, k_size, q_steps, l_max_convert+1, q_min, q_max, k_min, k_max);
 
     /* Calculate the multipoles */
-    evolveMultipoles(&m, &ptdat, tau_ini, tau_fin, tol, M, c_vel, pars.Verbose);
+    evolveMultipoles(&m, tau_ini, tau_fin, tol, M, c_vel, perturb_zAtLogTau, first_perturb_index, second_perturb_index, pars.Verbose);
 
     /* Scale factor at final time */
     double z_fin = perturb_zAtLogTau(log(tau_fin));
     double a = 1./(1+z_fin);
 
+    /* Select the transfer function needed for gauge transformation */
+    switchPerturbInterp(&ptdat, delta_shift_index, 0);
+    switchPerturbInterp(&ptdat, theta_shift_index, 1);
+
     /* N-body gauge transformation */
-    convertMultipoleGauge_Nb(&m, &ptdat, log(tau_fin), a, M, c_vel);
+    convertMultipoleGauge_Nb(&m, log(tau_fin), a, M, c_vel, first_perturb_index, second_perturb_index);
 
     /* Switch back to h' and eta' mode */
     switchPerturbInterp(&ptdat, h_prime_index, 0);
@@ -273,8 +293,8 @@ int main(int argc, char *argv[]) {
     printf("Interpolation initialized.\n");
 
     /* Generate grids with the monomial multipoles */
-    initGrids(&pars, &mmono, &grs);
-    generateGrids(&pars, &us, &mmono, fbox, &grs);
+    initGrids(pars.GridSize, pars.BoxLen, &mmono, &grs);
+    generateGrids(&mmono, fbox, &grs);
 
     double eval_x = 16;
     double eval_y = 26;
