@@ -1,0 +1,6 @@
+1) Unpack perturb_vector.tar.gz in this directory.
+2) Adjust default.ini according to your preferences.
+3) There are two tests:
+3a) "./testlib shows" a minimal implementation of all library functionalities.
+3b) "./firebolt_check default.ini" tests the multipole integration against CLASS.
+

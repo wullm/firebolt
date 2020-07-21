@@ -217,6 +217,8 @@ int main(int argc, char *argv[]) {
     printf("\n");
 
     printf("The initial time is %f\n", exp(ptdat.log_tau[0]));
+    printf("\n");
+    printf("Integrating the moments.\n\n");
 
     /* Initialize the multipoles */
     int k_size = 30;
@@ -246,6 +248,10 @@ int main(int argc, char *argv[]) {
     /* Also convert to monomial basis */
     convertMultipoleBasis_L2m(&m, &mmono, l_max_convert);
 
+    printf("\n");
+    printf("Stage one (monomial basis): the moments for all momentum bins.\n");
+    printf("q k Psi0, Psi1, Psi2, Psi36\n");
+
     /* For each momentum bin */
     for (int i=0; i<q_steps; i++) {
         double q = mmono.q[i];
@@ -264,6 +270,10 @@ int main(int argc, char *argv[]) {
 
     printf("\n\n");
 
+    printf("\n");
+    printf("Stage one (Legendre basis): the moments for all momentum bins.\n");
+    printf("q k Psi0, Psi1, Psi2, Psi3, Psi4, Psi5, Psi6\n");
+
     /* For each momentum bin */
     for (int i=0; i<q_steps; i++) {
         double q = m.q[i];
@@ -280,9 +290,6 @@ int main(int argc, char *argv[]) {
 
         printf("%f %f %e %e %e %e %e %e %e\n", q, k, Psi0, Psi1, Psi2, Psi3, Psi4, Psi5, Psi6);
     }
-
-
-
 
     printf("Done with integrating. Processing the moments.\n");
 
@@ -306,6 +313,10 @@ int main(int argc, char *argv[]) {
     double eval_ny2 = -1;
     double eval_nz2 = 0;
 
+    printf("\n");
+    printf("Stage two: try two directions for all momentum bins.\n");
+    printf("q Psi(x,q,n1) Psi(x,q,n2) f(x,q,n1) f(x,q,n2)\n");
+
     /* Try evaluating */
     double e1,e2,f0_eval;
     for (int i=0; i<m.q_size; i++) {
@@ -313,15 +324,15 @@ int main(int argc, char *argv[]) {
         f0_eval = f0(q);
         e1 = evalDensityBin(&grs, eval_x, eval_y, eval_z, eval_nx1, eval_ny1, eval_nz1, i);
         e2 = evalDensityBin(&grs, eval_x, eval_y, eval_z, eval_nx2, eval_ny2, eval_nz2, i);
-        // e1 = evalDensity(&grs, 1./64.*256., 14./64.*256, 60./64.*256., 1., 0., 0., i);
-        // e2 = evalDensity(&grs, 1./64.*256., 14./64.*256, 60./64.*256., -1., 0., 0., i);
         printf("%f %e %e %f %f\n", q, e1, e2, f0_eval*(1+e1), f0_eval*(1+e2));
     }
 
 
-    printf("Stage two.\n");
+    printf("\n");
+    printf("Stage three: interpolating between momentum bins.\n");
+    printf("q Psi(x,q,n1) Psi(x,q,n2) f(x,q,n1) f(x,q,n2)\n");
 
-    /* Try evaluating in-between bins */
+    /* Try interpolating between momentum bins */
     for (int i=0; i<10*m.q_size; i++) {
         double q = ((double) i )/10 * q_max/m.q_size;
         f0_eval = f0(q);
@@ -331,11 +342,12 @@ int main(int argc, char *argv[]) {
     }
 
 
-    printf("Stage three.\n");
-
+    printf("\n");
+    printf("Stage four: random points in phase space.\n");
+    printf("f0 Psi1 Psi2\n");
 
     /* Sample random points in phase space */
-    for (int i=0; i<10000; i++) {
+    for (int i=0; i<20; i++) {
         double x = box_len * (double) rand() / RAND_MAX;
         double y = box_len * (double) rand() / RAND_MAX;
         double z = box_len * (double) rand() / RAND_MAX;
@@ -358,13 +370,10 @@ int main(int argc, char *argv[]) {
         double Psi0 = evalDensityBinZero(&grs, x, y, z, nx, ny, nz, bin);
         double Psi1 = evalDensityBinSimple(&grs, x, y, z, nx, ny, nz, bin);
 
-
         // evalDensity(&grs, m.q_size, log(q_min), log(q_max), x, y, z, nx, ny, nz, q);
 
-        printf("%f %f %f\n", f0_eval, Psi0, Psi1);
+        printf("%f %e %e\n", f0_eval, Psi0, Psi1);
     }
-
-    printf("Bliep bloep.\n");
 
     /* Create FFT plan */
     fftw_plan c2r = fftw_plan_dft_c2r_3d(N, N, N, fbox, box, FFTW_ESTIMATE);
@@ -376,17 +385,8 @@ int main(int argc, char *argv[]) {
     fft_execute(c2r);
     fft_normalize_c2r(box, N, box_len);
 
-
     char fff[50] = "density.hdf5";
     writeGRF_H5(box, N, box_len, fff);
-
-    for (int i=0; i<m.q_size; i++) {
-        double q = m.q[i];
-        f0_eval = f0(q);
-        e1 = gridCIC(box, N, box_len, eval_x, eval_y, eval_z);
-        printf("%f\t %e\t %f\t %f\t %f\n", q, e1, 0., f0_eval*(1+e1), 0.);
-    }
-
     fftw_destroy_plan(c2r);
 
     /* For each multipole/momentum bin pair, create the corresponding grid */
