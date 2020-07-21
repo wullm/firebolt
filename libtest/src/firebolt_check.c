@@ -27,6 +27,14 @@
 
 const char *fname;
 
+
+static inline double first_perturb_index(double k, double log_tau) {
+    return perturbInterp(k, log_tau, 0);
+}
+static inline double second_perturb_index(double k, double log_tau) {
+    return perturbInterp(k, log_tau, 1);
+}
+
 int main(int argc, char *argv[]) {
     if (argc == 1) {
         printf("No parameter file specified.\n");
@@ -116,7 +124,7 @@ int main(int argc, char *argv[]) {
     int h_prime_index = 0, eta_prime_index = 0;
     int d_ncdm_index = 0, t_ncdm_index = 0 , shear_ncdm_index = 0,
         l3_ncdm_index = 0, cs2_ncdm_index = 0;
-
+    int delta_shift_index = -1, theta_shift_index = -1;
     for (int i=0; i<ptdat.n_functions; i++) {
         if (strcmp(ptdat.titles[i], "h_prime") == 0) {
             h_prime_index = i;
@@ -139,6 +147,12 @@ int main(int argc, char *argv[]) {
         } else if (strcmp(ptdat.titles[i], "cs2_ncdm[0]") == 0) {
             cs2_ncdm_index = i;
             printf("Found 'cs2_ncdm[0]', index = %d\n", cs2_ncdm_index);
+        } else if (strcmp(ptdat.titles[i], "t_cdm") == 0) {
+            theta_shift_index = i;
+            printf("Found '%s', index = %d\n", ptdat.titles[i], i);
+        } else if (strcmp(ptdat.titles[i], "delta_shift_Nb_m") == 0) {
+            delta_shift_index = i;
+            printf("Found '%s', index = %d\n", ptdat.titles[i], i);
         }
     }
 
@@ -191,44 +205,6 @@ int main(int argc, char *argv[]) {
     {
         double log_tau = log(tau_ini);
 
-        /* Redshift */
-        // double z = bg_z_at_log_tau(log_tau);
-        // double a = 1./(1+z);
-
-        /* Obtain the background density and pressure */
-        // bg_interp_switch_func(&bg, bti.id_rho_ncdm[0]);
-        // double rho_nu = bg_func_at_log_tau(log_tau);
-        // bg_interp_switch_func(&bg, bti.id_p_ncdm[0]);
-        // double p_nu = bg_func_at_log_tau(log_tau);
-        // double w_nu = p_nu/rho_nu; //equation of state
-
-        // /* Determine a'/a = H * a */
-        // bg_interp_switch_func(&bg, bti.id_H);
-        // double H = bg_func_at_log_tau(log_tau);
-        // double H_conf = H*a; // = a'/a
-
-        // /* Transformations to N-body gauge */
-        // switchPerturbInterp(&ptdat, 0, 0); // h'
-        // switchPerturbInterp(&ptdat, 1, 1); // eta'
-        // double h_prime = perturbInterp(k, log_tau, 0);
-        // double eta_prime = perturbInterp(k, log_tau, 1);
-        // double alpha = (h_prime + 6*eta_prime)/(2*k*k);
-        //
-        // switchPerturbInterp(&ptdat, 2, 0); // H_T_Nb_prime
-        // switchPerturbInterp(&ptdat, 3, 1); // t_tot
-        //
-        // double H_T_Nb_prime = perturbInterp(k, log_tau, 0);
-        // double theta_shift = H_T_Nb_prime + alpha*k*k;
-        // double theta_tot = perturbInterp(k, log_tau, 1) - theta_shift;
-        //
-        // /* Little h correction for theta's */
-        // theta_shift *= (cosmo.h * cosmo.h);
-        // theta_tot *= (cosmo.h * cosmo.h);
-
-        /* Synchronous to N-body gauge transformation */
-        // delta_nu += 3*(1+w_nu)*H_conf*theta_tot/k/k;
-        // theta_nu += theta_shift;
-
         /* Compare with CLASS results */
         switchPerturbInterp(&ptdat, d_ncdm_index, 0);
         switchPerturbInterp(&ptdat, t_ncdm_index, 1);
@@ -237,12 +213,6 @@ int main(int argc, char *argv[]) {
         double class_theta_nu = perturbInterp(k, log_tau, 1);
 
         printf("class_delta = %e, class_theta = %e\n", class_delta_nu, class_theta_nu);
-
-        /* Little h correction for theta's */
-        // class_theta_nu *= cosmo.h * cosmo.h;
-
-        // class_delta_nu -= 3*(1+w_nu)*H_conf*theta_tot/k/k;
-        // class_theta_nu -= theta_shift;
 
         /* Also determine the shear and l3 */
         switchPerturbInterp(&ptdat, shear_ncdm_index, 0); //shear
@@ -285,9 +255,11 @@ int main(int argc, char *argv[]) {
         double dlnf0_dlnq = compute_dlnf0_dlnq(q, y);
         double f0_eval = f0(q);
 
-
         /* Generate initial conditions */
         // generate_ics(&bg, &bti, q, k, exp(ptdat.log_tau[0]), &Psi, l_max);
+
+        /* Reset the Psi vector */
+        memset(Psi, 0, (l_max+1)*sizeof(double));
 
         /* At the initial time */
         double z0 = bg_z_at_log_tau(ptdat.log_tau[0]);
@@ -304,14 +276,7 @@ int main(int argc, char *argv[]) {
         double eps = hypot(q, a*M);
         double c_vel = us.SpeedOfLight;
 
-        evolve_gsl(&Psi, q, k, l_max, tau_ini, tau_fin, M, c_vel, dlnf0_dlnq, tol);
-
-        /* At the final time, compare with the expected CLASS results */
-        // double eps_fin = hypot(q, a_fin*M);
-        // double Psi0 = - 0.25 * class_delta_nu * dlnf0_dlnq;
-        // double Psi1 = - eps_fin / (3*q*k) * class_theta_nu * dlnf0_dlnq;
-        // double Psi2 = - 0.5 * class_shear_nu * dlnf0_dlnq;
-        // double Psi3 = - 0.25 * class_l3_nu * dlnf0_dlnq;
+        evolve_gsl(&Psi, q, k, l_max, tau_ini, tau_fin, M, c_vel, dlnf0_dlnq, bg_z_at_log_tau, first_perturb_index, second_perturb_index, tol);
 
         /* Do the momentum integrals */
         rho_delta_nu += q*q*eps*Psi[0]*f0_eval*dq;
@@ -341,8 +306,8 @@ int main(int argc, char *argv[]) {
 
     printf("\n");
     printf("w = %f\n", w_nu);
-    printf("rho_nu = %f\n", rho_nu);
-    printf("rho_delta_nu = %f\n", rho_delta_nu);
+    printf("rho_nu = %e\n", rho_nu);
+    printf("rho_delta_nu = %e\n", rho_delta_nu);
     printf("factor = %e\n", factor_ncdm);
     printf("\n");
 
@@ -363,77 +328,22 @@ int main(int argc, char *argv[]) {
     double l3_nu = rho_l3_nu/rho_nu;
     double cs2_nu = delta_p_nu/rho_delta_nu / (-k*k);
 
-    // /* Transformations to N-body gauge */
-    // switchPerturbInterp(&ptdat, 0, 0); // h'
-    // switchPerturbInterp(&ptdat, 1, 1); // eta'
-    // double h_prime = perturbInterp(k, log_tau_fin, 0);
-    // double eta_prime = perturbInterp(k, log_tau_fin, 1);
-    // double alpha = (h_prime + 6*eta_prime)/(2*k*k);
-    //
-    // switchPerturbInterp(&ptdat, 2, 0); // H_T_Nb_prime
-    // switchPerturbInterp(&ptdat, 3, 1); // t_tot
-    //
-    // double H_T_Nb_prime = perturbInterp(k, log_tau_fin, 0);
-    // double theta_shift = H_T_Nb_prime + alpha*k*k;
-    // double theta_tot = perturbInterp(k, log_tau_fin, 1) - theta_shift;
-    //
-    // /* Little h correction for theta's */
-    // theta_shift *= (cosmo.h * cosmo.h);
-    // theta_tot *= (cosmo.h * cosmo.h);
+    /* Select the transfer function needed for gauge transformation */
+    switchPerturbInterp(&ptdat, delta_shift_index, 0);
+    switchPerturbInterp(&ptdat, theta_shift_index, 1);
 
-    /* Synchronous to N-body gauge transformation */
-    // delta_nu += 3*(1+w_nu)*H_conf*theta_tot/k/k;
-    // theta_nu += theta_shift;
+    /* N-body gauge transformation */
+    delta_nu += perturbInterp(k, log_tau_fin, 0);
+    theta_nu += perturbInterp(k, log_tau_fin, 1);
 
+    /* Switch back to h' and eta' mode */
+    switchPerturbInterp(&ptdat, h_prime_index, 0);
+    switchPerturbInterp(&ptdat, eta_prime_index, 1);
 
-    printf("rel. error [delta, theta, shear, l3, cs2] = [%f, %f, %f, %f, %f]\n", delta_nu/class_delta_nu, theta_nu/class_theta_nu, shear_nu/class_shear_nu, l3_nu/class_l3_nu, cs2_nu/class_cs2_nu);
+    printf("rel. to CLASS [delta, theta, shear, l3, cs2] = [%f, %f, %f, %f, %f]\n", delta_nu/class_delta_nu, theta_nu/class_theta_nu, shear_nu/class_shear_nu, l3_nu/class_l3_nu, cs2_nu/class_cs2_nu);
     printf("values [delta, theta, shear, l3, cs2] = [%e, %e, %e, %e, %e]\n", delta_nu, theta_nu, shear_nu, l3_nu, cs2_nu);
 
-    printf("All done!.\n");
-
-    switchPerturbInterp(&ptdat, d_ncdm_index, 0);
-    printf("\n\n %e %e\n", perturbInterp(k, ptdat.log_tau[0], 1), perturbInterp(k, log_tau_fin, 1));
-    printf("%e %e\n", ini_shear_nu, class_shear_nu);
-
-
-    // for (int j=0; j<q_steps; j++) {
-    //     double dq = q_max/q_steps;
-    //     double q = (j+0.5) * dq;
-    //
-    //     /* Derivative of the distribution function (5-point stencil) */
-    //     double y = 0.0001;
-    //     double dlnf0_dlnq = compute_dlnf0_dlnq(q, y);
-    //     double f0_eval = f0(q);
-    //
-    //
-    //     /* Generate initial conditions */
-    //     // generate_ics(&bg, &bti, q, k, exp(ptdat.log_tau[0]), &Psi, l_max);
-    //
-    //     /* At the initial time */
-    //     double a = 1./(1+z);
-    //     double eps = hypot(q, a*M);
-    //
-    //     double Psi0 = - 0.25 * delta_nu * dlnf0_dlnq;
-    //     double Psi1 = - eps / (3*q*k) * theta_nu * dlnf0_dlnq;
-    //     double Psi2 = - 0.5 * shear_nu * dlnf0_dlnq;
-    //     double Psi3 = - 0.25 * l3_nu * dlnf0_dlnq;
-    //
-    //     // printf("000 %f %e %e %e %e\n", q, Psi0, Psi1, Psi2, Psi3);
-    //     printf("000 %f %e %e %e %e\n", q, Psi[0], Psi[1], Psi[2], Psi[3]);
-    // }
-
-
-
-
-
-
     free(Psi);
-
-    // printf("\n\n");
-    // for (int i=0; i<ptdat.tau_size; i++) {
-    //     double shear = perturbInterp(k, ptdat.log_tau[i], 1);
-    //     printf("%e %e\n", exp(ptdat.log_tau[i]), shear);
-    // }
 
     /* Release the interpolation splines */
     bg_interp_free(&bg);

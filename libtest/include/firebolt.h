@@ -27,13 +27,8 @@
 #include "perturb_data.h"
 #include "perturb_interp.h"
 #include "ic.h"
-#include "evolve.h"
 
-#include "fft.h"
-#include "multipoles.h"
-#include "multipole_interp.h"
-#include "grids.h"
-#include "evaluate.h"
+#include <firebolt_nano.h>
 
 #define TXT_RED "\033[31;1m"
 #define TXT_GREEN "\033[32;1m"

@@ -24,7 +24,6 @@
 #include <assert.h>
 #include "../include/multipoles.h"
 #include "../include/evolve.h"
-#include "../include/ic.h"
 
 
 /* Simple binomial coefficient function */

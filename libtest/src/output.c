@@ -19,7 +19,7 @@
 
 #include <string.h>
 #include "../include/output.h"
-#include "../include/fft.h"
+#include "../../include/fft.h"
 
 int write_perturb(struct perturb_data *data, struct params *pars,
                   struct units *us, char *fname) {

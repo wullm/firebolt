@@ -336,7 +336,6 @@ double evalDensityBinZero(const struct grids *grs, double x, double y, double z,
     const int N = grs->N;
     const double boxlen = grs->boxlen;
     const int q_size = grs->q_size;
-    const double h = boxlen/N;
 
     if (index_q > q_size) {
         printf("Error: exceeding maximum momentum bin.\n");

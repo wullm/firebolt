@@ -22,7 +22,7 @@
 #include <string.h>
 #include <math.h>
 #include "../include/ic.h"
-#include "../include/multipoles.h"
+#include "../../include/multipoles.h"
 
 
 

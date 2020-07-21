@@ -28,7 +28,7 @@
 
 // #include "../include/firebolt_min.h"
 
-#include "../include/firebolt_nano.h"
+#include <firebolt_nano.h>
 #include "../include/input.h"
 #include "../include/output.h"
 #include "../include/perturb_data.h"

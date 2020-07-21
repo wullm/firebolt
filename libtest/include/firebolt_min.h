@@ -27,6 +27,6 @@
 #include "perturb_interp.h"
 
 /* The bare minimum */
-#include "firebolt_nano.h"
+#include <firebolt_nano.h>
 
 #endif
