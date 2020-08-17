@@ -27,7 +27,7 @@
 #include "../include/fft.h"
 #include "../include/multipole_interp.h"
 
-static inline void kernel_transfer_function(struct kernel *the_kernel) {
+static inline void kernel_multipole_transfer_function(struct kernel *the_kernel) {
     double k = the_kernel->k;
 
     if (k == 0) {
@@ -63,7 +63,7 @@ int generateGrids(const struct multipoles *m,
             switchMultipoleInterp(m, index_l, index_q);
 
             /* Apply the transfer function to grf and store in fbox */
-            fft_apply_kernel(fbox, grf, N, boxlen, kernel_transfer_function);
+            fft_apply_kernel(fbox, grf, N, boxlen, kernel_multipole_transfer_function);
 
             // /* Compute the pre-factor = (2l+1) * (-1)^l */
             // double factor = (2*index_l + 1) * pow(-1, index_l);
