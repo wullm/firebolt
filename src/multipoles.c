@@ -186,7 +186,7 @@ int convertMultipoleBasis_L2m(struct multipoles *mL, struct multipoles *mm, int 
     if (q_size != mm->q_size || k_size != mm->k_size) {
         printf("Error: multipole structs differ in size along q or k dimension.\n");
         return 1;
-    } else if (mm->k[0] != mL->k[0] || mm->k[k_size-1] != mL->k[k_size-1]) {
+    } else if ((mm->k[0] - mL->k[0])/mL->k[0] > 1e-5 || (mm->k[k_size-1] - mL->k[k_size-1])/mL->k[k_size-1] > 1e-5) {
         printf("Error: multipole structs have different k vectors.\n");
         return 1;
     } else if (l_max_convert >= mm->l_size) {
