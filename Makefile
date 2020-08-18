@@ -15,7 +15,7 @@ HDF5_LIBRARIES += -L/usr/lib/x86_64-linux-gnu/hdf5/serial -I/usr/include/hdf5/se
 #Putting it together
 INCLUDES = $(HDF5_INCLUDES) $(GSL_INCLUDES)
 LIBRARIES = $(STD_LIBRARIES) $(FFTW_LIBRARIES) $(HDF5_LIBRARIES) $(GSL_LIBRARIES)
-CFLAGS = -Wall -Wshadow=global -Ofast -march=native -fopenmp -fPIC -ggdb3
+CFLAGS = -Wall -Wshadow -Ofast -march=native -fopenmp -fPIC -ggdb3
 
 OBJECTS = lib/*.o
 
