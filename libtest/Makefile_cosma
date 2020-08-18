@@ -10,6 +10,8 @@ GSL_LIBRARIES = -lgsl -lgslcblas
 
 GSL_INCLUDES =
 
+FIREBOLT_PATH = "../"
+
 HDF5_INCLUDES += -I/usr/lib64 -L/usr/lib64 -I/cosma/local/gcc/7.3.0/lib64/ -L/cosma/local/gcc/7.3.0/lib64/ -I/cosma/local/parallel-hdf5/intel_2018_intel_mpi_2018/1.10.3/lib -L/cosma/local/parallel-hdf5/intel_2018_intel_mpi_2018/1.10.3/lib -I/cosma/local/parallel-hdf5/intel_2018_intel_mpi_2018/1.10.3/include
 HDF5_LIBRARIES +=
 
@@ -36,7 +38,7 @@ all:
 
 	$(GCC) src/firebolt_check.c -o firebolt_check -I/home/qvgd89/firebolt/include $(INCLUDES) $(OBJECTS) $(LIBRARIES) $(CFLAGS)
 
-	$(GCC) src/testlib.c -o testlib obj/perturb_data.o obj/perturb_interp.o obj/input.o -L/home/qvgd89/firebolt -I/home/qvgd89/firebolt/include -lfirebolt -lfftw3 -lgsl -lgslcblas $(INI_PARSER) $(HDF5_LIBRARIES) $(INCLUDES) $(CFLAGS) -lm -Wl,-rpath=/home/qvgd89/firebolt
+	$(GCC) src/testlib.c -o testlib obj/perturb_data.o obj/perturb_interp.o obj/input.o -L$(FIREBOLT_PATH) -I$(FIREBOLT_PATH)/include -lfirebolt -lfftw3 -lgsl -lgslcblas $(INI_PARSER) $(HDF5_LIBRARIES) $(INCLUDES) $(CFLAGS) -lm -Wl,-rpath=$(FIREBOLT_PATH)
 
 minIni:
 	cd parser && make
