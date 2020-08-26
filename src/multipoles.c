@@ -52,10 +52,17 @@ static inline unsigned long long binomial(unsigned long n, unsigned long k) {
 // }
 
 static inline double fbinomial(double n, double k) {
-    return exp(lgamma(n+1) - lgamma(k+1) - lgamma(n-k+1));
+    /* The magnitude is evaluated using the gamma function */
+    /* Note that this breaks down for negative integers, but we don't care
+     * about those, only about positive rational n */
+    double F = exp(lgamma(n+1) - lgamma(k+1) - lgamma(n-k+1));
+
+    /* The sign is determined by counting the number of negative terms in the
+     * numerator. This is only relevant if n < k. */
+    F *= ((n < k) && (int) (ceil(n) - k) % 2) ? -1 : 1;
+
+    return F;
 }
-
-
 
 /* Fermi-Dirac distribution function */
 double f0(double q) {
