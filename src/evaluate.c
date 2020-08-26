@@ -180,7 +180,7 @@ double evalDensityBin(const struct grids *grs, double x, double y, double z,
         double dl_Phi_l = 0;
 
         /* The denominator of every lth derivative we are computing */
-        double h_factor = pow(h, -l); // h = grid spacing
+        double h_factor = pow(h, l); // h = grid spacing
 
         /* Retrieve the needed grid values */
         int max_width = dw[l]; //largest stencil width
