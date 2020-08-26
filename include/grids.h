@@ -29,9 +29,11 @@ struct grids {
   int q_size;
   int l_size;
   double *grids; //all the grids are stored in sequence
+  double cutoff; //a UV-cutoff scale (units of k)
 };
 
-int initGrids(int N, double boxlen, const struct multipoles *m, struct grids *grs);
+int initGrids(int N, double boxlen, const struct multipoles *m,
+              struct grids *grs, double cutoff);
 int cleanGrids(struct grids *grs);
 
 int generateGrids(const struct multipoles *m,

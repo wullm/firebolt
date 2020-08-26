@@ -37,6 +37,15 @@ static inline void kernel_multipole_transfer_function(struct kernel *the_kernel)
     }
 }
 
+static inline void kernel_lowpass(struct kernel *the_kernel) {
+    double k = the_kernel->k;
+    double *cutoff = (double*) the_kernel->params;
+    double k2 = k*k;
+    double c2 = (*cutoff)*(*cutoff);
+
+    the_kernel->kern = exp(-k2 / c2);
+}
+
 /* Generate a density grid for each particle type by applying the power
  * spectrum to the random phases. The necessary transfer functions are in trs.
  */
@@ -63,7 +72,12 @@ int generateGrids(const struct multipoles *m,
             switchMultipoleInterp(m, index_l, index_q);
 
             /* Apply the transfer function to grf and store in fbox */
-            fft_apply_kernel(fbox, grf, N, boxlen, kernel_multipole_transfer_function);
+            fft_apply_kernel(fbox, grf, N, boxlen, kernel_multipole_transfer_function, NULL);
+
+            /* Apply UV-cutoff if requested */
+            if (grs->cutoff > 0) {
+                fft_apply_kernel(fbox, fbox, N, boxlen, kernel_lowpass, &grs->cutoff);
+            }
 
             // /* Compute the pre-factor = (2l+1) * (-1)^l */
             // double factor = (2*index_l + 1) * pow(-1, index_l);
@@ -100,11 +114,13 @@ int generateGrids(const struct multipoles *m,
     return 0;
 }
 
-int initGrids(int N, double boxlen, const struct multipoles *m, struct grids *grs) {
+int initGrids(int N, double boxlen, const struct multipoles *m,
+              struct grids *grs, double cutoff) {
 
     /* Grid dimensions */
     grs->N = N;
     grs->boxlen = boxlen;
+    grs->cutoff = cutoff;
     int totalGridSize = (grs->N) * (grs->N) * (grs->N);
 
     /* Number of grids */
