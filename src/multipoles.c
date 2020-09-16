@@ -292,7 +292,7 @@ int computeDensity(struct multipoles *m, double *density, double mass, double a,
 
     /* For each wavenumber */
     for (int j=0; j<k_size; j++) {
-        double k = m->k[j];
+        // double k = m->k[j];
 
         double rho_delta_nu = 0;
 
