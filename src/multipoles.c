@@ -281,3 +281,33 @@ int cleanMultipoles(struct multipoles *m) {
 
     return 0;
 }
+
+int computeDensity(struct multipoles *m, double *density, double mass, double a,
+                   double rho_nu, double factor_ncdm) {
+
+    int q_size = m->q_size;
+    int k_size = m->k_size;
+    double factor = factor_ncdm / (a*a*a*a);
+    double dlogq = (log(m->q[m->q_size-1]) - log(m->q[0])) / m->q_size;
+
+    /* For each wavenumber */
+    for (int j=0; j<k_size; j++) {
+        double k = m->k[j];
+
+        double rho_delta_nu = 0;
+
+        /* For each momentum bin */
+        for (int i=0; i<q_size; i++) {
+            double q = m->q[i];
+            double dq = dlogq * q;
+            double f0_eval = f0(q);
+            double Psi_0 = m->Psi[i * k_size + j];
+            double eps = hypot(q, a*mass); //dimensionless energy
+            rho_delta_nu += q*q*eps*Psi_0*f0_eval*dq;
+        }
+
+        density[j] = factor * rho_delta_nu / rho_nu;
+    }
+
+    return 0;
+}

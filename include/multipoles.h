@@ -52,6 +52,8 @@ int convertMultipoleGauge_Nb(struct multipoles *mL,
 int resetMultipoles(struct multipoles *m);
 int cleanMultipoles(struct multipoles *m);
 
+int computeDensity(struct multipoles *m, double *density, double mass, double a,
+                   double rho_nu, double factor_ncdm);
 
 
 #endif
